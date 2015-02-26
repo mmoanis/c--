@@ -34,13 +34,13 @@ default     {
             }
             
 
-\"[^"]*\"    {
+\"([^"\\]|\\.)*\"    {
                             /* string token */
                             printf("stringo: %s\n", yytext);
                             return (STRING);
              }
 
-'[^']'  {
+\'([^\'\\]|\\.)\'  {
                 /* char token */
                 
                 // dummie statments
