@@ -50,20 +50,22 @@ default     {
                 }
                     
                 printf("charo: %s\n", yytext);
-                return (STRING);
+                return (CHAR);
             }
 
-[/][/]|[/][*]|[*][/]    {
-                            /* comment tokens*/
-                            printf("commento: %s\n", yytext);
-                            return (COMMENT);
-                        }
+
  
 
 [a-zA-Z_][a-zA-Z0-9_]*  {
                             /* variable token */
                             printf("varo: %s\n", yytext);
                             return (VARIABLE);
+                        }
+
+(\/\/.*\n)    {
+                            /* comment tokens*/
+                            printf("commento: %s\n", yytext);
+                            return (COMMENT);
                         }
                         
 [ \t\n]+ ;
