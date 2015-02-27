@@ -8,17 +8,16 @@
 %option yylineno
 %option noyywrap
 
-ID     [A-Za-z_][A-Za-z_0-9]*
-INT    -?[1-9][0-9]*
-FLOAT	[0-9]+.[0-9]+f
-DOUBLE 	[0-9]+.[0-9]+
-NUM 	-?[0-9]*
-AOP     [-+*/^=~!]
-LOP     [<>]|("==")|("<=")|(>=)
-VARIABLE [a-zA-Z_][a-zA-Z0-9_]*
-STRING \"([^"\\]|\\.)*\"
-CHAR \'([^\'\\]|\\.)\'
-COMMENT (\/\/.*\n)
+INT         -?[1-9][0-9]*
+FLOAT	    [0-9]+.[0-9]+f
+DOUBLE 	    [0-9]+.[0-9]+
+NUM 	    -?[0-9]*
+AOP         [-+*/^=~!]
+LOP         [<>]|("==")|("<=")|(>=)
+VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
+STRING      \"([^"\\]|\\.)*\"
+CHAR        \'([^\'\\]|\\.)\'
+COMMENT     (\/\/.*\n)
 
 %%
 switch  
@@ -47,11 +46,15 @@ default
 	/* default token */
 	printf("default\n");
 	return (DEFAULT);
-}     
-                        
-[ \t\n]+
+}
 
- /* conditions  token */
+const
+{
+    printf("constant\n");
+    return (CONST);
+}
+
+/* conditions  token */
 if {return IF;}
 			
 else {return ELSE;}
@@ -63,14 +66,14 @@ while 	{printf(">>>>>>>>>>(while \"%s\" %u)\n", yytext, yylineno);}
 do 		{printf(">>>>>>>>(do  \"%s\" %u)\n", yytext, yylineno);}
 whiledo   {printf(">>>>>>>>(whiledo \"%s\" %u)\n", yytext, yylineno);}
 
-int
+INT
 {
 	/* integer token */
 	/* yylval = atoi(yytext);*/
 	return INT;
 }
 
-float
+FLOAT
 {
 	/* float token */
 	/*yylval = atof(yytext);*/
@@ -78,7 +81,7 @@ float
 }
 
 
-double
+DOUBLE
 {
 	/* double token */
 	/*yylval = atof(yytext);*/
@@ -112,12 +115,6 @@ VARIABLE
 	return (VARIABLE);
 	}
 
-COMMENT    
-{
-	/* comment tokens*/
-	printf("commento: %s\n", yytext);
-	return (COMMENT);
-}
 
 AOP
 	return *yytext;
@@ -131,13 +128,17 @@ AOP
 
 {INT}       {printf("(int %s %u)\n",yytext, yylineno);}
 {NUM}       {printf("(number %s %u)\n",yytext, yylineno);}
-{ID}        {printf("(id \"%s\" %u)\n", yytext, yylineno);}
 {AOP}        {printf("(op \"%s\" %u)\n", yytext, yylineno);}
 
 
  /* Ignore comments and whitespace. */
-#[^\n]*     {}
-[ \t\r\n]   {}
+[ \t\r\n]   ;
+COMMENT    
+{
+	/* comment tokens*/
+	printf("commento: %s\n", yytext);
+}
+
 
 <<EOF>>     {printf("(eof %u)\n", yylineno); return 0;}
 
