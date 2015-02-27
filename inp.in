@@ -1,0 +1,24 @@
+forfor=231231;
+for(i=0;i<n;i++)
+{
+	N=10;
+	while(N--)
+	{
+		foro=0;
+		whileo=-0.5;
+		lolo=1,doable=0.0;
+		
+		if(lolo==1)
+		{
+			do
+				doable2=0;
+			while(foro);
+		}
+		elsif(lolo>1)
+		{
+			foro=2;
+		}
+		else
+			foro=3;
+	}
+}
