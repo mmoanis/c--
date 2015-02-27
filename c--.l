@@ -122,49 +122,6 @@ COMMENT
 AOP
 	return *yytext;
 
-switch  
-{
-	/* switch token */
-	printf("switch: %s\n", yytext);
-	return (SWITCH);
-}
-
-case    
-{
-	/* case token */  
-	printf("case\n");
-	return (CASE);
-}
-        
-break   
-{
-	/* break token */
-	printf("break\n");
-	return (BREAK);
-}
-
-default     
-{
-	/* default token */
-	printf("default\n");
-	return (DEFAULT);
-}     
-                        
-[ \t\n]+
-
- /* conditions  token */
-if {return IF;}
-			
-else {return ELSE;}
-			
-elseif {return ELSEIF;}
-	/*loop statement*/
-for     {printf(">>>>>>>>(for \"%s\" %u)\n", yytext, yylineno);}
-while 	{printf(">>>>>>>>>>(while \"%s\" %u)\n", yytext, yylineno);}
-do 		{printf(">>>>>>>>(do  \"%s\" %u)\n", yytext, yylineno);}
-whiledo   {printf(">>>>>>>>(whiledo \"%s\" %u)\n", yytext, yylineno);}
-
-
  /* Print delimiters. */
 [(]         {printf("(left-parenthesis %u)\n", yylineno);}
 [)]         {printf("(right-parenthesis %u)\n", yylineno);}
