@@ -19,137 +19,54 @@ CHAR        \'([^\'\\]|\\.)\'
 COMMENT     (\/\/.*\n)
 
 %%
-switch  
-{
-	/* switch token */
-	printf("switch: %s\n", yytext);
-	return (SWITCH);
-}
 
-case    
-{
-	/* case token */  
-	printf("case\n");
-	return (CASE);
-}
+switch      {printf("(switch %u)\n", yylineno);}
+
+case        {printf("(case %u)\n", yylineno);}
         
-break   
-{
-	/* break token */
-	printf("break\n");
-	return (BREAK);
-}
+break       {printf("(break %u)\n", yylineno);}
 
-default     
-{
-	/* default token */
-	printf("default\n");
-	return (DEFAULT);
-}
+default     {printf("(default %u)\n", yylineno);}
 
-const
-{
-    printf("constant\n");
-    return (CONST);
-}
+const       {printf("(if %u)\n", yylineno);}
 
-/* conditions  token */
-if {
-    printf(">>>>>>>>(if \"%s\" %u)\n", yytext, yylineno);
-    return IF;
-}
+
+if          {printf("(if %u)\n", yylineno);}
 			
-else 
-{
-    printf(">>>>>>>>(else \"%s\" %u)\n", yytext, yylineno);
-    return ELSE;
-}
+else        {printf("(else %u)\n", yylineno);}
 			
-elsif 
-{
-    printf(">>>>>>>>(elsif \"%s\" %u)\n", yytext, yylineno);
-    return ELSIF;
-}
-
-/*loop statement*/
-for     {printf(">>>>>>>>(for \"%s\" %u)\n", yytext, yylineno);}
-while 	{printf(">>>>>>>>>>(while \"%s\" %u)\n", yytext, yylineno);}
-do 		{printf(">>>>>>>>(do  \"%s\" %u)\n", yytext, yylineno);}
-whiledo   {printf(">>>>>>>>(whiledo \"%s\" %u)\n", yytext, yylineno);}
-
-INT
-{
-	/* integer token */
-	/* yylval = atoi(yytext);*/
-	return INT;
-}
-
-FLOAT
-{
-	/* float token */
-	/*yylval = atof(yytext);*/
-	return FLOAT;
-}
+elsif       {printf("(elsif %u)\n", yylineno);}
 
 
-DOUBLE
-{
-	/* double token */
-	/*yylval = atof(yytext);*/
-	return DOUBLE;
-}
+for         {printf("(for %u)\n", yylineno);}
+while       {printf("(while %u)\n", yylineno);}
+do 		    {printf("(do %u)\n", yylineno);}
+whiledo     {printf("(whiledo %u)\n", yylineno);}
 
-STRING   
-{
-	/* string token */
-	printf("stringo: %s\n", yytext);
-	return (STRING);
-}
+{FLOAT}     {printf("(float \"%s\" %u)\n", yytext, yylineno);}
 
-CHAR  
-{
-	/* char token */
-	
-	// dummie statments
-	//if (yytext[1] == '\\')   {
-		//yytext[1] = yytext[2] = '\'';
-		//yytext[3] = '\0';
-	//}            
-	printf("charo: %s\n", yytext);
-	return (CHAR);
-}
-
-VARIABLE  
-{
-	/* variable token */
-	printf("varo: %s\n", yytext);
-	return (VARIABLE);
-}
+{DOUBLE}    {printf("(double \"%s\" %u)\n", yytext, yylineno);}
 
 
-AOP
-	return *yytext;
+{STRING}    {printf("(string \"%s\" %u)\n", yytext, yylineno);}
 
- /* Print delimiters. */
+{CHAR}      {printf("(char \"%s\" %u)\n", yytext, yylineno);}
+
+{VARIABLE}  {printf("(variable \"%s\" %u)\n", yytext, yylineno);}
+
+{COMMENT}   {printf("(comment \"%s\" %u)\n", yytext, yylineno);}
+
+[ \t\r\n]*   ;
+
 [(]         {printf("(left-bracket %u)\n", yylineno);}
 [)]         {printf("(right-bracket %u)\n", yylineno);}
 [{]         {printf("(left-parenthesis %u)\n", yylineno);}
 [}]         {printf("(right-parenthesis %u)\n", yylineno);}
 [;]         {printf("(semicolon %u)\n", yylineno);}
 
- /* Print identifiers, integers and operators. */
 
 {INT}       {printf("(int %s %u)\n",yytext, yylineno);}
-{AOP}        {printf("(op \"%s\" %u)\n", yytext, yylineno);}
-
-
- /* Ignore comments and whitespace. */
- COMMENT    
-{
-	/* comment tokens*/
-	printf("commento: %s\n", yytext);
-}
-[ \t\r\n]*   ;
+{AOP}       {printf("(op \"%s\" %u)\n", yytext, yylineno);}
 
 
 
