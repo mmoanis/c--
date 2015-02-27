@@ -8,12 +8,11 @@
 %option yylineno
 %option noyywrap
 
-INT         -?[1-9][0-9]*
 FLOAT	    [0-9]+.[0-9]+f
 DOUBLE 	    [0-9]+.[0-9]+
-NUM 	    -?[0-9]*
+INT 	    [-+]?[0-9]+
 AOP         [-+*/^=~!]
-LOP         [<>]|("==")|("<=")|(>=)|("!=")
+LOP         [<>]|("==")|("<=")|(">=")|("!=")
 VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
 STRING      \"([^"\\]|\\.)*\"
 CHAR        \'([^\'\\]|\\.)\'
@@ -55,12 +54,24 @@ const
 }
 
 /* conditions  token */
-if {return IF;}
+if {
+    printf(">>>>>>>>(if \"%s\" %u)\n", yytext, yylineno);
+    return IF;
+}
 			
-else {return ELSE;}
+else 
+{
+    printf(">>>>>>>>(else \"%s\" %u)\n", yytext, yylineno);
+    return ELSE;
+}
 			
-elseif {return ELSEIF;}
-	/*loop statement*/
+elsif 
+{
+    printf(">>>>>>>>(elsif \"%s\" %u)\n", yytext, yylineno);
+    return ELSIF;
+}
+
+/*loop statement*/
 for     {printf(">>>>>>>>(for \"%s\" %u)\n", yytext, yylineno);}
 while 	{printf(">>>>>>>>>>(while \"%s\" %u)\n", yytext, yylineno);}
 do 		{printf(">>>>>>>>(do  \"%s\" %u)\n", yytext, yylineno);}
@@ -129,7 +140,6 @@ AOP
  /* Print identifiers, integers and operators. */
 
 {INT}       {printf("(int %s %u)\n",yytext, yylineno);}
-{NUM}       {printf("(number %s %u)\n",yytext, yylineno);}
 {AOP}        {printf("(op \"%s\" %u)\n", yytext, yylineno);}
 
 
