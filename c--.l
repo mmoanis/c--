@@ -15,10 +15,18 @@ DOUBLE 	[0-9]+.[0-9]+
 NUM 	-?[0-9]*
 AOP     [-+*/^=~!]
 LOP     [<>]|("==")|("<=")|(>=)
-VARIABLE [a-zA-Z_][a-zA-Z0-9_]* 
-
+VARIABLE [a-zA-Z_][a-zA-Z0-9_]*
+STRING \"([^"\\]|\\.)*\"
+CHAR \'([^\'\\]|\\.)\'
+COMMENT (\/\/.*\n)
 
 %%
+int
+{
+	/* integer token */
+	/* yylval = atoi(yytext);*/
+	return INT;
+}
 
 float
 {
@@ -35,12 +43,38 @@ double
 	return DOUBLE;
 }
 
-
-int
+STRING   
 {
-	/* integer token */
-	/* yylval = atoi(yytext);*/
-	return INT;
+	/* string token */
+	printf("stringo: %s\n", yytext);
+	return (STRING);
+}
+
+CHAR  
+{
+	/* char token */
+	
+	// dummie statments
+	if (yytext[1] == '\\')   {
+		yytext[1] = yytext[2] = '\'';
+		yytext[3] = '\0';
+	}            
+	printf("charo: %s\n", yytext);
+	return (CHAR);
+}
+
+VARIABLE  
+{
+	/* variable token */
+	printf("varo: %s\n", yytext);
+	return (VARIABLE);
+	}
+
+COMMENT    
+{
+	/* comment tokens*/
+	printf("commento: %s\n", yytext);
+	return (COMMENT);
 }
 
 AOP
@@ -73,42 +107,9 @@ default
 	printf("default\n");
 	return (DEFAULT);
 }     
-
-\"([^"\\]|\\.)*\"    
-{
-	/* string token */
-	printf("stringo: %s\n", yytext);
-	return (STRING);
-}
-
-\'([^\'\\]|\\.)\'  
-{
-	/* char token */
-	
-	// dummie statments
-	if (yytext[1] == '\\')   {
-		yytext[1] = yytext[2] = '\'';
-		yytext[3] = '\0';
-	}            
-	printf("charo: %s\n", yytext);
-	return (CHAR);
-}
-
-variable  
-{
-	/* variable token */
-	printf("varo: %s\n", yytext);
-	return (VARIABLE);
-	}
-
-(\/\/.*\n)    
-{
-	/* comment tokens*/
-	printf("commento: %s\n", yytext);
-	return (COMMENT);
-}
                         
-[ \t\n]+ ;
+[ \t\n]+
+
  /* conditions  token */
 if {return IF;}
 			
