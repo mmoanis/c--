@@ -1,6 +1,6 @@
 %{
 #include <stdio.h>
-#include "y.tab.h"
+//#include "y.tab.h"
 #include <stdlib.h>
 #include <math.h>
 %}
@@ -8,9 +8,7 @@
 %option yylineno
 %option noyywrap
 
-FLOAT	    [0-9]+.[0-9]+f
-DOUBLE 	    [0-9]+.[0-9]+
-INT 	    [-+]?[0-9]+
+DOUBLE 	    [0-9]+\.[0-9]+|[0-9]+
 AOP         [-+*/^=~!]
 LOP         [<>]|("==")|("<=")|(">=")|("!=")
 VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
@@ -41,9 +39,7 @@ elsif       {printf("(elsif %u)\n", yylineno);}
 for         {printf("(for %u)\n", yylineno);}
 while       {printf("(while %u)\n", yylineno);}
 do 		    {printf("(do %u)\n", yylineno);}
-whiledo     {printf("(whiledo %u)\n", yylineno);}
 
-{FLOAT}     {printf("(float \"%s\" %u)\n", yytext, yylineno);}
 
 {DOUBLE}    {printf("(double \"%s\" %u)\n", yytext, yylineno);}
 
@@ -58,15 +54,8 @@ whiledo     {printf("(whiledo %u)\n", yylineno);}
 
 [ \t\r\n]*   ;
 
-[(]         {printf("(left-bracket %u)\n", yylineno);}
-[)]         {printf("(right-bracket %u)\n", yylineno);}
-[{]         {printf("(left-parenthesis %u)\n", yylineno);}
-[}]         {printf("(right-parenthesis %u)\n", yylineno);}
-[;]         {printf("(semicolon %u)\n", yylineno);}
 
 
-{INT}       {printf("(int %s %u)\n",yytext, yylineno);}
-{AOP}       {printf("(op \"%s\" %u)\n", yytext, yylineno);}
 
 
 
