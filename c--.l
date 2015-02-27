@@ -15,34 +15,100 @@ DOUBLE 	[0-9]+.[0-9]+
 NUM 	-?[0-9]*
 AOP     [-+*/^=~!]
 LOP     [<>]|("==")|("<=")|(>=)
-yytext 
+VARIABLE [a-zA-Z_][a-zA-Z0-9_]* 
 
 
 %%
-/* float token */
+
 float
-{	
-/*yylval = atof(yytext);*/
-return FLOAT;
+{
+	/* float token */
+	/*yylval = atof(yytext);*/
+	return FLOAT;
 }
 
-/* double token */
+
 double
-{	
-/*yylval = atof(yytext);*/
-return DOUBLE;
+{
+	/* double token */
+	/*yylval = atof(yytext);*/
+	return DOUBLE;
 }
 
-/* integer token */
+
 int
 {
-/* yylval = atoi(yytext);*/
-return INT;
+	/* integer token */
+	/* yylval = atoi(yytext);*/
+	return INT;
 }
 
 AOP
-return *yytext;
+	return *yytext;
 
+switch  
+{
+	/* switch token */
+	printf("switch: %s\n", yytext);
+	return (SWITCH);
+}
+
+case    
+{
+	/* case token */  
+	printf("case\n");
+	return (CASE);
+}
+        
+break   
+{
+	/* break token */
+	printf("break\n");
+	return (BREAK);
+}
+
+default     
+{
+	/* default token */
+	printf("default\n");
+	return (DEFAULT);
+}     
+
+\"([^"\\]|\\.)*\"    
+{
+	/* string token */
+	printf("stringo: %s\n", yytext);
+	return (STRING);
+}
+
+\'([^\'\\]|\\.)\'  
+{
+	/* char token */
+	
+	// dummie statments
+	if (yytext[1] == '\\')   {
+		yytext[1] = yytext[2] = '\'';
+		yytext[3] = '\0';
+	}            
+	printf("charo: %s\n", yytext);
+	return (CHAR);
+}
+
+variable  
+{
+	/* variable token */
+	printf("varo: %s\n", yytext);
+	return (VARIABLE);
+	}
+
+(\/\/.*\n)    
+{
+	/* comment tokens*/
+	printf("commento: %s\n", yytext);
+	return (COMMENT);
+}
+                        
+[ \t\n]+ ;
  /* conditions  token */
 if {return IF;}
 			
