@@ -1,6 +1,8 @@
 %{
 #include <stdio.h>
+#include "y.tab.h"
 #include <stdlib.h>
+#include <math.h>
 %}
 
 %option yylineno
@@ -8,13 +10,45 @@
 
 ID     [A-Za-z_][A-Za-z_0-9]*
 INT    -?[1-9][0-9]*
+FLOAT	[0-9]+.[0-9]+f
+DOUBLE 	[0-9]+.[0-9]+
 NUM 	-?[0-9]*
-AOP     [-+*/^=]
+AOP     [-+*/^=~!]
 LOP     [<>]|("==")|("<=")|(>=)
+yytext 
 
 
 %%
+/* float token */
+float
+{	
+/*yylval = atof(yytext);*/
+return FLOAT;
+}
 
+/* double token */
+double
+{	
+/*yylval = atof(yytext);*/
+return DOUBLE;
+}
+
+/* integer token */
+int
+{
+/* yylval = atoi(yytext);*/
+return INT;
+}
+
+AOP
+return *yytext;
+
+ /* conditions  token */
+if {return IF;}
+			
+else {return ELSE;}
+			
+elseif {return ELSEIF;}
 	/*loop statement*/
 for     {printf(">>>>>>>>(for \"%s\" %u)\n", yytext, yylineno);}
 while 	{printf(">>>>>>>>>>(while \"%s\" %u)\n", yytext, yylineno);}
