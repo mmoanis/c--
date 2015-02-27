@@ -13,7 +13,7 @@ FLOAT	    [0-9]+.[0-9]+f
 DOUBLE 	    [0-9]+.[0-9]+
 NUM 	    -?[0-9]*
 AOP         [-+*/^=~!]
-LOP         [<>]|("==")|("<=")|(>=)
+LOP         [<>]|("==")|("<=")|(>=)|("!=")
 VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
 STRING      \"([^"\\]|\\.)*\"
 CHAR        \'([^\'\\]|\\.)\'
@@ -100,10 +100,10 @@ CHAR
 	/* char token */
 	
 	// dummie statments
-	if (yytext[1] == '\\')   {
-		yytext[1] = yytext[2] = '\'';
-		yytext[3] = '\0';
-	}            
+	//if (yytext[1] == '\\')   {
+		//yytext[1] = yytext[2] = '\'';
+		//yytext[3] = '\0';
+	//}            
 	printf("charo: %s\n", yytext);
 	return (CHAR);
 }
@@ -113,15 +113,17 @@ VARIABLE
 	/* variable token */
 	printf("varo: %s\n", yytext);
 	return (VARIABLE);
-	}
+}
 
 
 AOP
 	return *yytext;
 
  /* Print delimiters. */
-[(]         {printf("(left-parenthesis %u)\n", yylineno);}
-[)]         {printf("(right-parenthesis %u)\n", yylineno);}
+[(]         {printf("(left-bracket %u)\n", yylineno);}
+[)]         {printf("(right-bracket %u)\n", yylineno);}
+[{]         {printf("(left-parenthesis %u)\n", yylineno);}
+[}]         {printf("(right-parenthesis %u)\n", yylineno);}
 [;]         {printf("(semicolon %u)\n", yylineno);}
 
  /* Print identifiers, integers and operators. */
@@ -132,12 +134,13 @@ AOP
 
 
  /* Ignore comments and whitespace. */
-[ \t\r\n]   ;
-COMMENT    
+ COMMENT    
 {
 	/* comment tokens*/
 	printf("commento: %s\n", yytext);
 }
+[ \t\r\n]*   ;
+
 
 
 <<EOF>>     {printf("(eof %u)\n", yylineno); return 0;}
