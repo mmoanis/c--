@@ -18,6 +18,9 @@ CHAR        \'([^\'\\]|\\.)\'
 COMMENT     (\/\/.*\n)
 
 %%
+true	    {printf("(true %u)\n", yylineno);}
+
+false	    {printf("(false %u)\n", yylineno);}
 
 switch      {printf("(switch %u)\n", yylineno);}
 
