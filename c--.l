@@ -8,6 +8,7 @@
 %option yylineno
 %option noyywrap
 
+INT	    [0-9]+
 DOUBLE 	    [0-9]+\.[0-9]+|[0-9]+
 AOP         [-+*/^=~!]
 LOP         [<>]|("==")|("<=")|(">=")|("!=")
@@ -40,6 +41,7 @@ for         {printf("(for %u)\n", yylineno);}
 while       {printf("(while %u)\n", yylineno);}
 do 		    {printf("(do %u)\n", yylineno);}
 
+{INT}	    {printf("(int \"%s\" %u)\n", yytext, yylineno);}
 
 {DOUBLE}    {printf("(double \"%s\" %u)\n", yytext, yylineno);}
 
