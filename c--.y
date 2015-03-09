@@ -10,7 +10,7 @@ extern int yylineno;
 
 %token INT DOUBLE AOP LOP VARIABLE STRING CHAR COMMENT
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
-%token DO WHILE FOR AND OR NOT BREAK
+%token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'

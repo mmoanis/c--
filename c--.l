@@ -27,6 +27,8 @@ case        {return (CASE); }
         
 break       {return (BREAK); }
 
+continue    {return (CONTINUE)}; 
+
 default     {return (DEFAULT); }
 
 const       {return (CONST); }
