@@ -1,61 +1,66 @@
 %{
 #include <stdio.h>
-//#include "y.tab.h"
 #include <stdlib.h>
-#include <math.h>
+#include "y.tab.h"
 %}
 
 %option yylineno
-%option noyywrap
 
-INT	    [0-9]+
-DOUBLE 	    [0-9]+\.[0-9]+|[0-9]+
-AOP         [-+*/^=~!]
-LOP         [<>]|("==")|("<=")|(">=")|("!=")
-VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
-STRING      \"([^"\\]|\\.)*\"
-CHAR        \'([^\'\\]|\\.)\'
-COMMENT     (\/\/.*\n)
+_INT	     [0-9]+
+_DOUBLE 	 [0-9]+\.[0-9]+|[0-9]+
+_AOP         [-+*/=~]
+_LOP         [|&^]
+_ROP         [<>]|("==")|("<=")|(">=")|("!=")
+_VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
+_STRING      \"([^"\\]|\\.)*\"
+_CHAR        \'([^\'\\]|\\.)\'
+_COMMENT     (\/\/.*\n)
 
 %%
-true	    {printf("(true %u)\n", yylineno);}
+true	    {return (TRUE); }
 
-false	    {printf("(false %u)\n", yylineno);}
+false	    {return (FALSE); }
 
-switch      {printf("(switch %u)\n", yylineno);}
+switch      {return (SWITCH); }
 
-case        {printf("(case %u)\n", yylineno);}
+case        {return (CASE); }
         
-break       {printf("(break %u)\n", yylineno);}
+break       {return (BREAK); }
 
-default     {printf("(default %u)\n", yylineno);}
+default     {return (DEFAULT); }
 
-const       {printf("(if %u)\n", yylineno);}
+const       {return (CONST); }
 
 
-if          {printf("(if %u)\n", yylineno);}
+if          {return (IF); }
 			
-else        {printf("(else %u)\n", yylineno);}
+else        {return (ELSE); }
 			
-elsif       {printf("(elsif %u)\n", yylineno);}
+elsif       {return (ELSIF); }
 
 
-for         {printf("(for %u)\n", yylineno);}
-while       {printf("(while %u)\n", yylineno);}
-do 		    {printf("(do %u)\n", yylineno);}
+for         {return (FOR); }
+while       {return (WHILE); }
+do 		    {return (DO); }
 
-{INT}	    {printf("(int \"%s\" %u)\n", yytext, yylineno);}
+and         {return (AND);  }
 
-{DOUBLE}    {printf("(double \"%s\" %u)\n", yytext, yylineno);}
+or          {return (OR);   }
+
+not         {return (NOT);  }
+
+{_INT}	    {return (INT); }
+
+{_DOUBLE}    {return (DOUBLE); }
 
 
-{STRING}    {printf("(string \"%s\" %u)\n", yytext, yylineno);}
+{_STRING}    {return (STRING); }
 
-{CHAR}      {printf("(char \"%s\" %u)\n", yytext, yylineno);}
+{_CHAR}      {return (CHAR); }
 
-{VARIABLE}  {printf("(variable \"%s\" %u)\n", yytext, yylineno);}
+{_VARIABLE}  {return (VARIABLE); }
 
-{COMMENT}   {printf("(comment \"%s\" %u)\n", yytext, yylineno);}
+{_COMMENT}   {return (COMMENT); }
 
 [ \t\r\n]*   ;
 
@@ -67,9 +72,4 @@ do 		    {printf("(do %u)\n", yylineno);}
 <<EOF>>     {printf("(eof %u)\n", yylineno); return 0;}
 
 %%
-
-int main(int argc, char* argv[]) {
-  yylex() ;
-  return EXIT_SUCCESS ;
-}
 
