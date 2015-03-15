@@ -6,10 +6,11 @@
 #include <string.h>
 
 extern int yylineno;
+extern char * yytext;
 %}
 
 
-%start expr
+%start list
 
 %token INT DOUBLE  LOP ROP VARIABLE STRING CHAR COMMENT 
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
@@ -23,81 +24,93 @@ extern int yylineno;
 %left UMINUS
 	
 %%
+
+
+list
+    : statement
+    | statement list
+    ;
+
+statement
+    : expr ';'
+    | ';'
+    ;    
+
 expr:
-
-        INT	 { $$ = $1; printf ("yacc:int "); }
+    INT	 { $$ = $1; printf ("yacc:int \n"); }
     |
-         DOUBLE  { $$ = $1; printf ("yacc:double");}
+    DOUBLE  { $$ = $1; printf ("yacc:double\n");}
     |
-	
-	 expr "==" expr  
-	{$$ == $1 ;
-		 printf ("yacc:equal equal ");}
-	|
-        expr '*' expr ';'
-         {
 
-           $$ = $1 * $3;
-		    printf ("yacc:times");
-          }
-   |
-        expr '/' expr ';'
-         {
-           $$ = $1 / $3;
-		    printf ("yacc:divide");
-         }
-	|
-	   expr '+' expr ';'
-         {
-           $$ = $1 + $3;
-		    printf ("yacc:plus");
-         }
-	|
-         expr '-' expr ';'
-         {
-           $$ = $1 - $3;
-		    printf ("yacc:minus");
-         }
-	|	 
-        expr '|' expr ';'
-         {
-           $$ = $1 | $3;
-		    printf ("yacc:or");
-         }
-	|
-	    expr '&' expr ';'
-         {
-           $$ = $1 & $3;
-		    printf ("yacc:and");
-         }
-	|
-	    expr '^' expr    ';'  
-	 {  $$ = pow($1 , $3); 
-		 printf ("yacc:power");}
-	 
-	|
-	 
-	 '~' expr ';'
-	 { $$ = ~ $2;
-	  printf ("yacc:not");}
-	|
+    expr "==" expr  
+    {$$ == $1 ;
+    printf ("yacc:equal equal\n");}
+    |
+    expr '*' expr
+    {
+
+    $$ = $1 * $3;
+    printf ("yacc:times\n");
+    }
+    |
+    expr '/' expr
+    {
+    $$ = $1 / $3;
+    printf ("yacc:divide\n");
+    }
+    |
+    expr '+' expr
+    {
+    $$ = $1 + $3;
+    printf ("yacc:plus\n");
+    }
+    |
+    expr '-' expr
+    {
+    $$ = $1 - $3;
+    printf ("yacc:minus\n");
+    }
+    |	 
+    expr '|' expr
+    {
+    $$ = $1 | $3;
+    printf ("yacc:or\n");
+    }
+    |
+    expr '&' expr
+    {
+    $$ = $1 & $3;
+    printf ("yacc:and\n");
+    }
+    |
+    expr '^' expr 
+    {  
+    printf ("yacc:power\n");}
+
+    |
+
+    '~' expr
+    { $$ = ~ $2;
+    printf ("yacc:not\n");}
+    |
     '-' expr  UMINUS
-         {
-           $$ = -$2;
-		    printf ("yacc:negative");
-         }	
+    {
+    $$ = -$2;
+    printf ("yacc:negative\n");
+    }	
 	
 	;
 %%
+
 main()
 {
-#if YYDEBUG
-yydebug = 1;
-#endif
-return (yyparse());
+    #if YYDEBUG
+        yydebug = 1;
+    #endif
+    return (yyparse());
 }
 yyerror(s)
 char *s;
 {
-  fprintf(stderr, "at %d %s\n", yylineno, s);
+  fprintf(stderr, "%s at %d: %s\n", yytext, yylineno, s);
 }
