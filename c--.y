@@ -20,9 +20,17 @@ extern int yylineno;
 
 %%
 
-    list : 
-            |
-            list error  {yyerrok;}
+    list 
+        : statement 
+        | statement list {yyerrok;}
+        ;
+    statement
+        : assignment_statement
+        ;
+    assignment_statement
+        : VARIABLE '=' expr statement
+        | CONST VARIABLE '=' expr statement
+        ;
 
 %%
 
