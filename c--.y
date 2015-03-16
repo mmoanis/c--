@@ -38,6 +38,7 @@ validate_char(char * yytext);
     int ival;
     char cval;
     double dval;
+    struct Node * node_ptr;
     char * iname;
     char * sval;
 };
@@ -54,6 +55,8 @@ validate_char(char * yytext);
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
+%type <node_ptr> list statement
+
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
 %left '*' '/'
@@ -63,8 +66,13 @@ validate_char(char * yytext);
 %%
 
     list : 
-            |
-            list error  {yyerrok;}
+         | statement list
+         | list error  {yyerrok;}
+         ;
+    
+    statement
+        :
+        ;
 
 %%
 
@@ -161,24 +169,28 @@ struct Node * make_constant(ConstantNodeType value, VariableType type)
 struct Node * make_operation(int operation, int nOfOperands, ... )
 {
     va_list ap;
-    nodeType *p;
-    
+    struct Node *n;
     size_t nodeSize;
+    
     int i;
+    
     /* allocate node */
-    nodeSize = SIZEOF_NODETYPE + sizeof(oprNodeType) +
-    (nops - 1) * sizeof(nodeType*);
-    if ((p = malloc(nodeSize)) == NULL)
-    yyerror("out of memory");
+    nodeSize = SIZEOF_NODETYPE + sizeof(OperationNodeType) + (nOfOperands - 1) * sizeof(struct Node*);
+    
+    if ((n = malloc(nodeSize)) == NULL)
+        yyerror("out of memory");
+        
     /* copy information */
-    p->type = typeOpr;
-    p->opr.oper = oper;
-    p->opr.nops = nops;
-    va_start(ap, nops);
-    for (i = 0; i < nops; i++)
-    p->opr.op[i] = va_arg(ap, nodeType*);
+    n->type = OPERATION;
+    n->opr.operation = operation;
+    n->opr.noOfOperands = nOfOperands;
+    
+    va_start(ap, nOfOperands);
+    for (i = 0; i < nOfOperands; i++)
+        n->opr.op[i] = va_arg(ap, struct Node*);
     va_end(ap);
-    return p;
+    
+    return n;
 }
 
 void free_node(struct Node * n)
@@ -235,6 +247,8 @@ validate_char(char * yytext)
 int
 main()
 {
+    // TODO: I think after doing yyparse, we should call the generate_code()
+    // and iterate over the symbolTable to make all variables say in a datasegment
     return yyparse() ;
 }
 
