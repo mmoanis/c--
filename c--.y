@@ -22,16 +22,33 @@ extern int yylineno;
 
     list 
         : statement 
-        | statement list {yyerrok;}
+        | statement list 
+		| statement error {yyerrok;}
         ;
     statement
         : assignment_statement
+		| declartion_statement
+		| expr
         ;
+	expr
+		: INT
+		| DOUBLE 
+		;
     assignment_statement
-        : VARIABLE '=' expr statement
-        | CONST VARIABLE '=' expr statement
+        : VARIABLE '=' assignment_expr ';'
+        | CONST VARIABLE '=' assignment_expr ';'
         ;
-
+	declartion_statement
+		: VARIABLE ';' 
+		;
+	assignment_expr
+		: expr 
+		| string_expr 
+		;
+	string_expr
+		: STRING
+		| CHAR 
+		;
 %%
 
 int
