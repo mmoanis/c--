@@ -2,19 +2,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "y.tab.h"
+
 %}
 
 %option yylineno
 
 _INT	     [0-9]+
 _DOUBLE 	 [0-9]+\.[0-9]+|[0-9]+
-_AOP         [-+*/=~]
-_LOP         [|&^]
 _ROP         [<>]|("==")|("<=")|(">=")|("!=")
 _VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
 _STRING      \"([^"\\]|\\.)*\"
 _CHAR        \'([^\'\\]|\\.)\'
 _COMMENT     (\/\/.*\n)
+_OTHERS      [:=(){};\-+*~|&^\/]
 
 %%
 true	    {return (TRUE); }
@@ -25,9 +25,9 @@ switch      {return (SWITCH); }
 
 case        {return (CASE); }
         
-break       {return (BREAK); }
+break     {return (BREAK); }
 
-continue    {return (CONTINUE)}; 
+continue    {return (CONTINUE); }
 
 default     {return (DEFAULT); }
 
@@ -51,25 +51,21 @@ or          {return (OR);   }
 
 not         {return (NOT);  }
 
-{_INT}	    {return (INT); }
+{_INT}	    {  return (INT); }
 
-{_DOUBLE}    {return (DOUBLE); }
+{_DOUBLE}    { return (DOUBLE); }
 
+{_STRING}    {  return (STRING); }
 
-{_STRING}    {return (STRING); }
+{_CHAR}      {  return (CHAR); }
 
-{_CHAR}      {return (CHAR); }
+{_VARIABLE}  {  return (VARIABLE); }
 
-{_VARIABLE}  {return (VARIABLE); }
+{_COMMENT}   {; }
 
-{_COMMENT}   {return (COMMENT); }
+{_OTHERS}   { return yytext[0];    }
 
 [ \t\r\n]*   ;
-
-
-
-
-
 
 <<EOF>>     {printf("(eof %u)\n", yylineno); return 0;}
 
