@@ -24,8 +24,6 @@ extern char * yytext;
 %left UMINUS
 	
 %%
-
-
 	list
 		: statement
 		| statement list
@@ -39,11 +37,8 @@ extern char * yytext;
 		| ';'
 		;    
 	assignment_statement
-        : VARIABLE '=' assignment_expr ';'
-        | CONST VARIABLE '=' assignment_expr ';'
-        ;
-	declartion_statement
-		: VARIABLE ';' 
+        	: VARIABLE '=' assignment_expr ';'
+        	| CONST VARIABLE '=' assignment_expr ';'
 		;
 	assignment_expr
 		: expr 
@@ -53,69 +48,73 @@ extern char * yytext;
 		: STRING
 		| CHAR 
 		;
-	expr:
+	declartion_statement
+		: VARIABLE ';' 
+		;
+	expr
+		:
 		INT	 { $$ = $1; printf ("yacc:int \n"); }
 		|
 		DOUBLE  { $$ = $1; printf ("yacc:double\n");}
 		|
-
 		expr "==" expr  
-		{$$ == $1 ;
-		printf ("yacc:equal equal\n");}
+		{	
+			$$ == $1 ;
+			printf ("yacc:equal equal\n");
+		}
 		|
 		expr '*' expr
 		{
-
-		$$ = $1 * $3;
-		printf ("yacc:times\n");
+			$$ = $1 * $3;
+			printf ("yacc:times\n");
 		}
 		|
 		expr '/' expr
 		{
-		$$ = $1 / $3;
-		printf ("yacc:divide\n");
+			$$ = $1 / $3;
+			printf ("yacc:divide\n");
 		}
 		|
 		expr '+' expr
 		{
-		$$ = $1 + $3;
-		printf ("yacc:plus\n");
+			$$ = $1 + $3;
+			printf ("yacc:plus\n");
 		}
 		|
 		expr '-' expr
 		{
-		$$ = $1 - $3;
-		printf ("yacc:minus\n");
+			$$ = $1 - $3;
+			printf ("yacc:minus\n");
 		}
 		|	 
 		expr '|' expr
 		{
-		$$ = $1 | $3;
-		printf ("yacc:or\n");
+			$$ = $1 | $3;
+			printf ("yacc:or\n");
 		}
 		|
 		expr '&' expr
 		{
-		$$ = $1 & $3;
-		printf ("yacc:and\n");
+			$$ = $1 & $3;
+			printf ("yacc:and\n");
 		}
 		|
 		expr '^' expr 
 		{  
-		printf ("yacc:power\n");}
-
+			printf ("yacc:power\n");
+		}
 		|
-
 		'~' expr
-		{ $$ = ~ $2;
-		printf ("yacc:not\n");}
+		{ 
+			$$ = ~ $2;
+			printf ("yacc:not\n");
+		}
 		|
 		'-' expr  UMINUS
 		{
-		$$ = -$2;
-		printf ("yacc:negative\n");
+			$$ = -$2;
+			printf ("yacc:negative\n");
 		}	
-		
 		;
 	%%
 
