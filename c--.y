@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include "symbolTable.h"
+#include "y.tab.h"
 // pointer to hash table
 struct Symbol * symbolTable = NULL;
 
@@ -19,7 +20,7 @@ void generate_code(struct Node * n);
 struct Node * make_identifier(char name[]);
 
 // handle a const usage
-struct Node * make_constant(ConstantNodeType value, VariableType type);
+struct Node * make_constant(YYSTYPE value, VariableType type);
 
 // handle an operation
 struct Node * make_operation(int operation, int nOfOperands, ... );
@@ -71,7 +72,8 @@ validate_char(char * yytext);
          ;
     
     statement
-        :
+        : INT {make_constant( (YYSTYPE)$1, tINT);  }
+        | DOUBLE {make_constant( (YYSTYPE)$1, tDOUBLE);  }
         ;
 
 %%
@@ -124,7 +126,7 @@ struct Node * make_identifier(char name[])
 }
 
 // handle a const usage
-struct Node * make_constant(ConstantNodeType value, VariableType type)
+struct Node * make_constant(YYSTYPE value, VariableType type)
 {
     struct Node * n;
     size_t nodeSize;
