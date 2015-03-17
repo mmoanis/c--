@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "y.tab.h"
+#include "symbolTable.h"
 
 %}
 
@@ -51,15 +52,16 @@ or          {return (OR);   }
 
 not         {return (NOT);  }
 
-{_INT}	    {  return (INT); }
 
-{_DOUBLE}    { return (DOUBLE); }
+{_INT}	    { yylval.ival = atoi(yytext);   return (INT); }
 
-{_STRING}    {  return (STRING); }
+{_DOUBLE}    { yylval.dval = atof(yytext); return (DOUBLE); }
 
-{_CHAR}      {  return (CHAR); }
+{_STRING}    { yylval.sval = yytext; return (STRING); }
 
-{_VARIABLE}  {  return (VARIABLE); }
+{_CHAR}      { yylval.cval = *yytext; return (CHAR); }
+
+{_VARIABLE}  { strcpy(yylval.iname, yytext); variableHandler(yytext); return (VARIABLE); }
 
 {_COMMENT}   {; }
 
