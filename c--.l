@@ -61,7 +61,7 @@ not         {return (NOT);  }
 
 {_CHAR}      { yylval.cval = *yytext; return (CHAR); }
 
-{_VARIABLE}  { strcpy(yylval.iname, yytext); variableHandler(yytext); return (VARIABLE); }
+{_VARIABLE}  {yylval.iname=newstr(yytext); variableHandler(yytext); return (VARIABLE); }
 
 {_COMMENT}   {; }
 

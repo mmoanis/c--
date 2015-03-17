@@ -32,6 +32,10 @@ void variableHandler(char yytext[]);
 void
 validate_char(char * yytext);
 
+/*Edited Here*/
+char * newstr(char * txt);// to create string 
+YYSTYPE Const;
+
 /////////////////////////////////////////////////////////////////////////////
 %}
 
@@ -78,7 +82,7 @@ validate_char(char * yytext);
 		;  
 		  
 	assignment_statement
-        : VARIABLE '=' assignment_expr ';'
+        : VARIABLE '=' assignment_expr ';' { $$=make_identifier($1);}
         | CONST VARIABLE '=' assignment_expr ';'
 		;
 		
@@ -99,11 +103,11 @@ validate_char(char * yytext);
 	expr
 		:
 		INT	 
-		    { 
+		    { (Const.ival=$1); $$=make_constant(Const,tINT);
 		    }
 		|
 		DOUBLE  
-		    { 
+		    { (Const.dval=$1); $$= make_constant(Const,tDOUBLE);
 		    }
 		|
 		expr "==" expr  
@@ -158,7 +162,15 @@ validate_char(char * yytext);
 
 %%
 
-
+char * newstr(char * txt)
+{
+	char *ret;
+	if((ret=malloc(strlen(txt)) )== NULL)
+        yyerror("out of memory");
+        
+	strcpy(ret,txt);
+	return ret;
+}
 /**
 * Generate assembly code for a hypothitical stack based machine
 * @param node in the parse tree
@@ -201,7 +213,9 @@ struct Node * make_identifier(char name[])
         
     /* copy information */
     n->type = IDENTIFIER;
-    strcpy(n->id.name, name);
+    
+    n->id.name=newstr(name);
+    //strcpy(n->id.name, name);
     return n;
 }
 
