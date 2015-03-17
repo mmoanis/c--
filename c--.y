@@ -110,7 +110,7 @@ extern char * yytext;
 			printf ("yacc:not\n");
 		}
 		|
-		'-' expr  UMINUS
+		'-' expr %prec  UMINUS
 		{
 			$$ = -$2;
 			printf ("yacc:negative\n");
