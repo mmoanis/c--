@@ -52,6 +52,7 @@ or          {return (OR);   }
 
 not         {return (NOT);  }
 
+
 {_INT}	    { yylval.ival = atoi(yytext);   return (INT); }
 
 {_DOUBLE}    { yylval.dval = atof(yytext); return (DOUBLE); }
@@ -71,7 +72,4 @@ not         {return (NOT);  }
 <<EOF>>     {printf("(eof %u)\n", yylineno); return 0;}
 
 %%
-
-
-
 

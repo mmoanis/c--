@@ -56,25 +56,105 @@ validate_char(char * yytext);
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
-%type <node_ptr> list statement
+%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
 %left '*' '/'
-%left '|' '&' '^' '~'
+%left '|' '&'  '~'
+%right '^'
 %left UMINUS
-
+	
 %%
-
-    list : 
-         | statement list
-         | list error  {yyerrok;}
-         ;
+    list 
+        : statement list
+        | statement error  {yyerrok;}
+        ;
     
     statement
-        : INT {make_constant( (YYSTYPE)$1, tINT);  }
-        | DOUBLE {make_constant( (YYSTYPE)$1, tDOUBLE);  }
-        ;
+		: assignment_statement
+		| declartion_statement
+		| expr ';'
+		;  
+		  
+	assignment_statement
+        : VARIABLE '=' assignment_expr ';'
+        | CONST VARIABLE '=' assignment_expr ';'
+		;
+		
+	assignment_expr
+		: expr 
+		| string_expr 
+		;
+		
+	string_expr
+		: STRING
+		| CHAR 
+		;
+		
+	declartion_statement
+		: VARIABLE ';'
+		;
+		
+	expr
+		:
+		INT	 
+		    { 
+		    }
+		|
+		DOUBLE  
+		    { 
+		    }
+		|
+		expr "==" expr  
+		    {	
+			
+		    }
+		|
+		expr '*' expr
+		    {
+			
+		    }
+		|
+		expr '/' expr
+		    {
+			
+		    }
+		|
+		expr '+' expr
+		    {
+			
+		    }
+		|
+		expr '-' expr
+		    {
+			
+		    }
+		|	 
+		expr '|' expr
+		    {
+			
+		    }
+		|
+		expr '&' expr
+		    {
+			
+		    }
+		|
+		expr '^' expr 
+		    {  
+			
+		    }
+		|
+		'~' expr
+		    {
+		    }
+		|
+		'-' expr %prec  UMINUS
+		    {
+			
+		    }	
+		;
 
 %%
 
