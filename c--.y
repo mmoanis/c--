@@ -4,6 +4,9 @@
 #include <stdarg.h>
 #include "symbolTable.h"
 #include "y.tab.h"
+
+extern int yylineno;
+
 // pointer to hash table
 struct Symbol * symbolTable = NULL;
 
@@ -27,7 +30,7 @@ struct Node * make_operation(int operation, int nOfOperands, ... );
 
 void free_node(struct Node * n);
 
-void variableHandler(char yytext[]);
+void variableHandler(char yytext[], char isConst);
 
 void
 validate_char(char * yytext);
@@ -71,8 +74,8 @@ YYSTYPE Const;
 	
 %%
     list 
-        : statement list
-        | statement error  {yyerrok;}
+        : list statement 
+        |
         ;
     
     statement
@@ -82,8 +85,8 @@ YYSTYPE Const;
 		;  
 		  
 	assignment_statement
-        : VARIABLE '=' assignment_expr ';' { $$=make_identifier($1);}
-        | CONST VARIABLE '=' assignment_expr ';'
+        : VARIABLE '=' assignment_expr ';' { variableHandler($1, 0); $$=make_identifier($1);}
+        | CONST VARIABLE '=' assignment_expr ';'    {variableHandler($2, 1); $$=make_identifier($2);}
 		;
 		
 	assignment_expr
@@ -92,12 +95,12 @@ YYSTYPE Const;
 		;
 		
 	string_expr
-		: STRING
-		| CHAR 
+		: STRING    { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
+		| CHAR { (Const.cval=$1); $$=make_constant(Const,tCHAR);}
 		;
 		
 	declartion_statement
-		: VARIABLE ';'
+		: VARIABLE ';'  {variableHandler($1, 0); $$=make_identifier($1);}
 		;
 		
 	expr
@@ -117,17 +120,17 @@ YYSTYPE Const;
 		|
 		expr '*' expr
 		    {
-			
+			    $$ = make_operation( '*', 2, $1, $3 );
 		    }
 		|
 		expr '/' expr
 		    {
-			
+			    $$ = make_operation( '/', 2, $1, $3 );
 		    }
 		|
 		expr '+' expr
 		    {
-			
+			    $$ = make_operation( '+', 2, $1, $3 );
 		    }
 		|
 		expr '-' expr
@@ -306,7 +309,7 @@ void free_node(struct Node * n)
 
 // check if the varialbe exits, or
 // create a new entry in hashtable and save the reference to it
-void variableHandler(char yytext[])
+void variableHandler(char yytext[], char isConst)
 {
     struct Symbol * temp;
     
@@ -318,10 +321,19 @@ void variableHandler(char yytext[])
         // create an entry for the variable
         temp = ( struct Symbol*)malloc(sizeof( struct Symbol));
         
-        strcpy(temp->name, yytext);
+        temp->name = newstr(yytext);
+        temp->isConst = isConst;
         
         // add to hashtable
         HASH_ADD_STR( symbolTable, name, temp );
+    }
+    else
+    {
+        if (temp->isConst == 1)
+        {
+            yyerror("attempt to assign a const variable");
+            //yyerrok;
+        }
     }
 }
 
@@ -351,7 +363,7 @@ main()
 yyerror(msg)
 char *msg;
 {
-  fprintf(stderr, "at %s\n", msg);
+  fprintf(stderr, "%d: %s\n", yylineno, msg);
 }
 
 int

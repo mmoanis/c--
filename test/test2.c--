@@ -1,0 +1,7 @@
+// insure that a const variable cannot be redefined/reassigned
+
+const x = 3;
+
+y = 3 - 2;
+
+x = 1;

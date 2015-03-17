@@ -63,6 +63,7 @@ struct Node
 struct Symbol
 {
     //int scope;          /* identify scope with numbers */
+    char isConst;
     char * name;        // name of the varialbe and the key in the hash table
     VariableType type;     /* identify the type of the variable*/
     ConstantNodeType value;      // yystype should be a union
