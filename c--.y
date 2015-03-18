@@ -216,36 +216,60 @@ void generate_code(struct Node * n)
         case OPERATION:    
             switch(n->opr.operation)
             {
-            	
-            	default:
-            	    //generate_code(n->opr.op[1]);
-            		
-            		
-            		switch(n->opr.operation)
-            		{
             			case '=':
             			    generate_code(n->opr.op[1]);
             			    printf("MOV %s, R%d\n", n->opr.op[0]->id.name, reg);
             				break;
             			case '*':
-            				printf("MUL\nPOP\nPOP\nPUSH RR\n");
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("MUL R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;
 	            		case '+':
-            				//printf("ADD RR");//RR:result register
             				generate_code(n->opr.op[1]);
             				generate_code(n->opr.op[0]);
             				printf("ADD R%d, R%d, R%d\n", reg-1, reg, reg-1);
             				reg -= 1;
             				break;
             			case '-':
-            				printf("SUB\nPOP\nPOP\nPUSH RR\n");//RR:result register
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("SUB R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;	
             			case '/':
-            				printf("DIV\nPOP\nPOP\nPUSH RR\n");
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("DIV R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;
-            		}
+            		    case '|':
+            		        generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("OR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
+            		        break;
+            		    case '&':
+            		        generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("AND R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
+            		        break;
+            		    case '~':
+            				generate_code(n->opr.op[0]);
+            				printf("NEG R%d, R%d\n", reg-1, reg);
+            				reg -= 1;
+            		        break;
+            		    case '^':
+            		        generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
+            		    case UMINUS:
+            		        break;
             }
-        break;
+            break;
         
         case IDENTIFIER:
             printf("MOV %s, R%d\n", n->id.name, reg);
@@ -258,10 +282,10 @@ void generate_code(struct Node * n)
         			reg += 1; printf("MOV R%d, %d\n",reg, n->con.ival);
         			break;
         		case tDOUBLE:
-        			printf("PUSH %lf\n",n->con.dval);
+        			reg += 1; printf("MOV R%d, %d\n",reg, n->con.dval);
         			break;
         		case tCHAR:
-        			printf("PUSH '%c'\n",n->con.cval);
+        			reg += 1; printf("MOV R%d, '%s'\n",reg, n->con.cval);
         			break;
         	}
         break;
