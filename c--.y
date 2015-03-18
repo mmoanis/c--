@@ -74,7 +74,7 @@ YYSTYPE Const;
 	
 %%
     list 
-        : list statement 
+        : list statement {	generate_code($2);}
         |
         ;
     
@@ -85,7 +85,8 @@ YYSTYPE Const;
 		;  
 		  
 	assignment_statement
-        : VARIABLE '=' assignment_expr ';' { variableHandler($1, 0); $$=make_identifier($1);}
+        : VARIABLE '=' assignment_expr ';' 			
+        	{variableHandler($1, 0); $$=make_operation( '=', 2, make_identifier($1), $3 );}
         | CONST VARIABLE '=' assignment_expr ';'    {variableHandler($2, 1); $$=make_identifier($2);}
 		;
 		
@@ -96,7 +97,7 @@ YYSTYPE Const;
 		
 	string_expr
 		: STRING    { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
-		| CHAR { (Const.cval=$1); $$=make_constant(Const,tCHAR);}
+		| CHAR 		{ (Const.cval=$1); $$=make_constant(Const,tCHAR);}
 		;
 		
 	declartion_statement
@@ -183,17 +184,51 @@ void generate_code(struct Node * n)
     // check the type of the node
     switch(n->type)
     {
-        case OPERATION:
-            // check the type of the operation
-            //switch(n->opr.operation)
-            //{
-            //}
+        
+        // check the type of the operation
+        case OPERATION:    
+            switch(n->opr.operation)
+            {
+            	
+            	default:
+            		generate_code(n->opr.op[0]);
+            		generate_code(n->opr.op[1]);
+            		switch(n->opr.operation)
+            		{
+            			
+            			case '*':
+            				printf("MUL\nPOP\nPOP\nPUSH RR\n");
+            				break;
+	            		case '+':
+            				printf("ADD\nPOP\nPOP\nPUSH RR\n");//RR:result register
+            				break;
+            			case '-':
+            				printf("SUB\nPOP\nPOP\nPUSH RR\n");//RR:result register
+            				break;	
+            			case '/':
+            				printf("DIV\nPOP\nPOP\nPUSH RR\n");
+            				break;
+            		}
+            }
         break;
         
         case IDENTIFIER:
+        
         break;
         
         case CONSTANT:
+        	switch(n->con.type)
+        	{
+        		case tINT:
+        			printf("PUSH %d\n",n->con.ival);
+        			break;
+        		case tDOUBLE:
+        			printf("PUSH %lf\n",n->con.dval);
+        			break;
+        		case tCHAR:
+        			printf("PUSH '%c'\n",n->con.cval);
+        			break;
+        	}
         break;
         
         default:
@@ -237,6 +272,7 @@ struct Node * make_constant(YYSTYPE value, VariableType type)
         
     /* copy information */
     n->type = CONSTANT;
+    n->con.type=type;// to indicate the type of the constant 
     
     switch (type)
     {
