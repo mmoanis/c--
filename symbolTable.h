@@ -21,7 +21,6 @@ typedef enum
     tCHAR
 } VariableType;
 
-
 // constant value
 typedef struct {
     union
@@ -29,8 +28,9 @@ typedef struct {
         int ival;
         double dval;
         char cval;
-        char * sval;
+        char * sval; 
     };
+    VariableType type;
 } ConstantNodeType;
 
 // identifier
@@ -42,7 +42,7 @@ typedef struct {
 typedef struct {
     int operation;  // operation
     int noOfOperands;   // no. of operands
-    struct Node *op[1];  // operands
+    struct Node *op[2];  // operands
 } OperationNodeType;
 
 // a node in the parse tree.
