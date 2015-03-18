@@ -13,6 +13,7 @@ struct Symbol * symbolTable = NULL;
 // identify the current scope of parsing
 int scopeLevel;
 
+int reg = 0;
 
 // perform a dfs to the parse tree to generate machine code
 void generate_code(struct Node * n);
@@ -217,20 +218,24 @@ void generate_code(struct Node * n)
             {
             	
             	default:
-            	    generate_code(n->opr.op[1]);
-            		generate_code(n->opr.op[0]);
+            	    //generate_code(n->opr.op[1]);
+            		
             		
             		switch(n->opr.operation)
             		{
             			case '=':
-            			    //generate_code(n->opr.op[0]);
-            			    printf("\n");
+            			    generate_code(n->opr.op[1]);
+            			    printf("MOV %s, R%d\n", n->opr.op[0]->id.name, reg);
             				break;
             			case '*':
             				printf("MUL\nPOP\nPOP\nPUSH RR\n");
             				break;
 	            		case '+':
-            				printf("ADD ");//RR:result register
+            				//printf("ADD RR");//RR:result register
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("ADD R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;
             			case '-':
             				printf("SUB\nPOP\nPOP\nPUSH RR\n");//RR:result register
@@ -243,14 +248,14 @@ void generate_code(struct Node * n)
         break;
         
         case IDENTIFIER:
-            printf("%s ", n->id.name);
+            printf("MOV %s, R%d\n", n->id.name, reg);
         break;
         
         case CONSTANT:
         	switch(n->con.type)
         	{
         		case tINT:
-        			printf("%d ",n->con.ival);
+        			reg += 1; printf("MOV R%d, %d\n",reg, n->con.ival);
         			break;
         		case tDOUBLE:
         			printf("PUSH %lf\n",n->con.dval);
