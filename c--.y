@@ -116,7 +116,32 @@ YYSTYPE Const;
 		|
 		expr "==" expr  
 		    {	
-			
+				$$ = make_operation( "==", 2, $1, $3 );
+		    }
+		|
+		expr "<=" expr  
+		    {	
+				$$ = make_operation( "<=", 2, $1, $3 );
+		    }
+		|
+		expr ">=" expr  
+		    {	
+				$$ = make_operation( ">=", 2, $1, $3 );
+		    }
+		|
+		expr '<' expr  
+		    {	
+				$$ = make_operation( '<', 2, $1, $3 );
+		    }
+		|
+		expr '>' expr  
+		    {	
+				$$ = make_operation( '>', 2, $1, $3 );
+		    }
+		|
+		expr "!=" expr  
+		    {	
+				$$ = make_operation( "!=", 2, $1, $3 );
 		    }
 		|
 		expr '*' expr
@@ -136,31 +161,32 @@ YYSTYPE Const;
 		|
 		expr '-' expr
 		    {
-			
+				$$ = make_operation( '-',2, $1, $3 );
 		    }
 		|	 
 		expr '|' expr
 		    {
-			
+				$$ = make_operation( '|', 2, $1, $3 );
 		    }
 		|
 		expr '&' expr
 		    {
-			
+				$$ = make_operation( '&', 2, $1, $3 );
 		    }
 		|
 		expr '^' expr 
 		    {  
-			
+				$$ = make_operation( '^', 2, $1, $3 );
 		    }
 		|
 		'~' expr
-		    {
+		    {	
+				$$ = make_operation( '~', 1, $2 );
 		    }
 		|
 		'-' expr %prec  UMINUS
 		    {
-			
+				$$ = make_operation( '-', 1, $2 );
 		    }	
 		;
 
