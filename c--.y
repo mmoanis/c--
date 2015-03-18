@@ -36,6 +36,12 @@ void variableHandler(char yytext[], char isConst);
 void
 validate_char(char * yytext);
 
+void make_dataSegment();
+
+void print_hashTable();
+
+void make_codeSegment(struct Node * tree);
+
 /*Edited Here*/
 char * newstr(char * txt);// to create string 
 YYSTYPE Const;
@@ -75,7 +81,7 @@ YYSTYPE Const;
 	
 %%
     list 
-        : list statement {	generate_code($2); free_node($2);}
+        : list statement {	 make_codeSegment($2);}
         |
         ;
     
@@ -282,10 +288,10 @@ void generate_code(struct Node * n)
         			reg += 1; printf("MOV R%d, %d\n",reg, n->con.ival);
         			break;
         		case tDOUBLE:
-        			reg += 1; printf("MOV R%d, %d\n",reg, n->con.dval);
+        			reg += 1; printf("MOV R%d, %a\n",reg, n->con.dval);
         			break;
         		case tCHAR:
-        			reg += 1; printf("MOV R%d, '%s'\n",reg, n->con.cval);
+        			reg += 1; printf("MOV R%d, '%c'\n",reg, n->con.cval);
         			break;
         	}
         break;
@@ -427,7 +433,6 @@ void variableHandler(char yytext[], char isConst)
         if (temp->isConst == 1)
         {
             yyerror("attempt to assign a const variable");
-            //yyerrok;
         }
     }
 }
@@ -445,14 +450,38 @@ validate_char(char * yytext)
 }
 
 
+// print the symbol table as a datasegment
+void make_dataSegment()
+{
+    
+    print_hashTable();
+}
 
+void print_hashTable()
+{
+    struct Symbol *s;
+    
+    printf("\n.data\n");
+    for(s=symbolTable; s != NULL; s=s->hh.next) {
+        printf("%s dd ?\n", s->name);
+    }
+}
+
+void make_codeSegment(struct Node * tree)
+{
+    
+    
+    generate_code(tree);
+    free_node(tree);
+}
 
 int
 main()
 {
-    // TODO: I think after doing yyparse, we should call the generate_code()
-    // and iterate over the symbolTable to make all variables say in a datasegment
-    return yyparse() ;
+    printf("#c-- compiler\n");
+    if (yyparse() ==0)
+        make_dataSegment();
+    return 0;
 }
 
 yyerror(msg)

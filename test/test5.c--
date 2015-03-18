@@ -1,0 +1,5 @@
+// check variable declerations
+
+varo1;
+varo2;
+varo3 = 4 + 2;

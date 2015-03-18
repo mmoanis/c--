@@ -69,7 +69,7 @@ not         {return (NOT);  }
 
 [ \t\r\n]*   ;
 
-<<EOF>>     {printf("(eof %u)\n", yylineno); return 0;}
+<<EOF>>     {printf("#(eof %u)\n", yylineno); return 0;}
 
 %%
 
