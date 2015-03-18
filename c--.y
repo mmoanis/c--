@@ -74,7 +74,7 @@ YYSTYPE Const;
 	
 %%
     list 
-        : list statement {	generate_code($2);}
+        : list statement {	generate_code($2); free_node($2);}
         |
         ;
     
@@ -191,16 +191,20 @@ void generate_code(struct Node * n)
             {
             	
             	default:
+            	    generate_code(n->opr.op[1]);
             		generate_code(n->opr.op[0]);
-            		generate_code(n->opr.op[1]);
+            		
             		switch(n->opr.operation)
             		{
-            			
+            			case '=':
+            			    //generate_code(n->opr.op[0]);
+            			    printf("\n");
+            				break;
             			case '*':
             				printf("MUL\nPOP\nPOP\nPUSH RR\n");
             				break;
 	            		case '+':
-            				printf("ADD\nPOP\nPOP\nPUSH RR\n");//RR:result register
+            				printf("ADD ");//RR:result register
             				break;
             			case '-':
             				printf("SUB\nPOP\nPOP\nPUSH RR\n");//RR:result register
@@ -213,14 +217,14 @@ void generate_code(struct Node * n)
         break;
         
         case IDENTIFIER:
-        
+            printf("%s ", n->id.name);
         break;
         
         case CONSTANT:
         	switch(n->con.type)
         	{
         		case tINT:
-        			printf("PUSH %d\n",n->con.ival);
+        			printf("%d ",n->con.ival);
         			break;
         		case tDOUBLE:
         			printf("PUSH %lf\n",n->con.dval);
