@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include "y.tab.h"
 #include "symbolTable.h"
-scopeLevel;
+extern int sfrom,sto;
+extern int scopes[110][110];
 %}
 
 %option yylineno
@@ -15,10 +16,12 @@ _VARIABLE    [a-zA-Z_][a-zA-Z0-9_]*
 _STRING      \"([^"\\]|\\.)*\"
 _CHAR        \'([^\'\\]|\\.)\'
 _COMMENT     (\/\/.*\n)
-_OTHERS      [:=(){};\-+*~|&^\/]
+_OTHERS      [:=();\-+*~|&^\/]
 
 %%
-
+"{" 			{sfrom++;sto++;++scopes[sfrom][sto];return '{';}
+"}" 			{sfrom--;sto--;;return '}';}
+han3rf 		{return HAN3RF;}
 true	    {return (TRUE); }
 
 false	    {return (FALSE); }
