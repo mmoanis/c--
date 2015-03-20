@@ -47,7 +47,7 @@ void make_codeSegment(struct Node * tree);
 
 /*Edited Here*/
 void printTree(struct Node * n,int lvl,int from,int to,int num);
-void variableHandler2(char yytext[], char isConst);
+struct Node* find_variable(char * txt);
 char * newstr(char * txt);// to create string 
 char * scope_resolution(char *txt);
 YYSTYPE Const;
@@ -136,6 +136,7 @@ int ** scope_ptr;
 		    { (Const.dval=$1); $$= make_constant(Const,tDOUBLE);
 		    }
 		|
+		
 		expr "==" expr  
 		    {	
 				$$ = make_operation( "==", 2, $1, $3 );
@@ -227,6 +228,18 @@ char * newstr(char * txt)
 * Generate assembly code for a hypothitical stack based machine
 * @param node in the parse tree
 **/
+struct Node* find_variable(char * txt)
+{
+	struct Symbol * temp;
+    
+    // look up the symbol table
+    HASH_FIND_STR(symbolTable, txt, temp);
+    if(!temp)return NULL;
+    struct Node* ret;
+    ret->id.name=temp->name;
+    return ret;
+
+}
 char * scope_resolution(char *txt)
 {
 	char tmp[50];
@@ -241,31 +254,31 @@ void printTree(struct Node * n,int lvl,int from,int to,int num)
 	
 	for(i=0;i<lvl;i++)
 	{
-		//printf("%3c",' ');
+		printf("%3c",' ');
 	}
 	if(n->type==OPERATION)
 	{
 		if(n->opr.operation=='s')
 		{
-			//printf("OP -> %c (%d,%d,%d)\n",n->opr.operation,from,to,scopes[from][to]);
+			printf("OP -> %c (%d,%d,%d)\n",n->opr.operation,from,to,scopes[from][to]);
 			printTree(n->opr.op[0],lvl+1,from+1,to+1,num);
 			printTree(n->opr.op[1],lvl+1,from+1,to+1,num);
 			
 		}
 		else
 		{
-			//printf("OP -> %c\n",n->opr.operation);
+			printf("OP -> %c\n",n->opr.operation);
 			printTree(n->opr.op[0],lvl+1,from,to,num);
 			printTree(n->opr.op[1],lvl+1,from,to,num);
 		}
 	}
 	else if(n->type==CONSTANT)
 	{
-		//printf("const -> %d\n",n->con.ival);
+		printf("const -> %d\n",n->con.ival);
 	}
 	else if(n->type==IDENTIFIER)
 	{
-		//printf("identifier -> %s\n",n->id.name);
+		printf("identifier -> %s\n",n->id.name);
 	}
 }
 void generate_code(struct Node * n)
