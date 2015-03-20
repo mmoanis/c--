@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "y.tab.h"
 #include "symbolTable.h"
-
+scopeLevel;
 %}
 
 %option yylineno
@@ -18,6 +18,7 @@ _COMMENT     (\/\/.*\n)
 _OTHERS      [:=(){};\-+*~|&^\/]
 
 %%
+
 true	    {return (TRUE); }
 
 false	    {return (FALSE); }

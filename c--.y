@@ -7,11 +7,15 @@
 
 extern int yylineno;
 
+
 // pointer to hash table
 struct Symbol * symbolTable = NULL;
 
 // identify the current scope of parsing
-int scopeLevel;
+ int scopeLevel;
+ int from=0;
+ int to=0;
+ int Num=0;
 
 int reg = 0;
 
@@ -43,6 +47,7 @@ void print_hashTable();
 void make_codeSegment(struct Node * tree);
 
 /*Edited Here*/
+void printTree(struct Node * n,int lvl);
 char * newstr(char * txt);// to create string 
 YYSTYPE Const;
 
@@ -70,7 +75,7 @@ YYSTYPE Const;
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
-%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement
+%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement 
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
@@ -89,8 +94,10 @@ YYSTYPE Const;
 		: assignment_statement
 		| declartion_statement
 		| expr ';'
-		;  
-		  
+		| '{' statement {printf("ggggg\n");scopeLevel++; $$=$2;}
+		| statement '}' {scopeLevel--; $$=$1;}
+	    ;  
+   
 	assignment_statement
         : VARIABLE '=' assignment_expr ';' 			
         	{variableHandler($1, 0); $$=make_operation( '=', 2, make_identifier($1), $3 );}
@@ -212,6 +219,29 @@ char * newstr(char * txt)
 * Generate assembly code for a hypothitical stack based machine
 * @param node in the parse tree
 **/
+void printTree(struct Node * n,int lvl)
+{
+	if(n==NULL)return;
+	int i;
+	for(i=0;i<lvl;i++)
+	{
+		printf("%3c",' ');
+	}
+	if(n->type==OPERATION)
+	{
+		printf("OP -> %c\n",n->opr.operation);
+		printTree(n->opr.op[0],lvl+1);
+		printTree(n->opr.op[1],lvl+1);
+	}
+	else if(n->type==CONSTANT)
+	{
+		printf("const -> %d\n",n->con.ival);
+	}
+	else if(n->type==IDENTIFIER)
+	{
+		printf("identifier -> %s\n",n->id.name);
+	}
+}
 void generate_code(struct Node * n)
 {
     // check the type of the node
@@ -469,8 +499,7 @@ void print_hashTable()
 
 void make_codeSegment(struct Node * tree)
 {
-    
-    
+    printTree(tree,0);
     generate_code(tree);
     free_node(tree);
 }
@@ -479,6 +508,7 @@ int
 main()
 {
     printf("#c-- compiler\n");
+    scopeLevel=0;
     if (yyparse() ==0)
         make_dataSegment();
     return 0;
