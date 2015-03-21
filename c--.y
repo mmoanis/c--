@@ -56,7 +56,7 @@ int scopes[110][110];
 int ** scope_ptr;
 
 
-typedef enum {"==", ">=", "<=", "!="} logicalEnum;
+enum logicalEnum {"==", ">=", "<=", "!="};
 logicalEnum equalEqual = "==";
 logicalEnum greaterThanEqual = ">=";
 logicalEnum lessThanEqual = "<=";
