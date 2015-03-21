@@ -39,6 +39,11 @@ validate_char(char * yytext);
 char * newstr(char * txt);// to create string 
 YYSTYPE Const;
 
+typedef enum {"==", ">=", "<=", "!="} logicalEnum;
+logicalEnum equalEqual = "==";
+logicalEnum greaterThanEqual = ">=";
+logicalEnum lessThanEqual = "<=";
+logicalEnum notEqual = "!=";
 /////////////////////////////////////////////////////////////////////////////
 %}
 
@@ -116,17 +121,22 @@ YYSTYPE Const;
 		|
 		expr "==" expr  
 		    {	
-				$$ = make_operation( "==", 2, $1, $3 );
+				$$ = make_operation( equalEqual, 2, $1, $3 );
+		    }
+		|
+		expr "!=" expr  
+		    {	
+				$$ = make_operation( notEqual, 2, $1, $3 );
 		    }
 		|
 		expr "<=" expr  
 		    {	
-				$$ = make_operation( "<=", 2, $1, $3 );
+				$$ = make_operation( lessThanEqual, 2, $1, $3 );
 		    }
 		|
 		expr ">=" expr  
 		    {	
-				$$ = make_operation( ">=", 2, $1, $3 );
+				$$ = make_operation( greaterThanEqual, 2, $1, $3 );
 		    }
 		|
 		expr '<' expr  
@@ -137,11 +147,6 @@ YYSTYPE Const;
 		expr '>' expr  
 		    {	
 				$$ = make_operation( '>', 2, $1, $3 );
-		    }
-		|
-		expr "!=" expr  
-		    {	
-				$$ = make_operation( "!=", 2, $1, $3 );
 		    }
 		|
 		expr '*' expr
@@ -187,7 +192,12 @@ YYSTYPE Const;
 		'-' expr %prec  UMINUS
 		    {
 				$$ = make_operation( '-', 1, $2 );
-		    }	
+		    }
+		|
+		'(' expr ')'
+         {
+           $$ = $2;
+         }
 		;
 
 %%
