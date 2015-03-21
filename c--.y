@@ -2,17 +2,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include "symbolTable.h"
 #include "y.tab.h"
 
 extern int yylineno;
 
+
 // pointer to hash table
 struct Symbol * symbolTable = NULL;
+struct Symbol * symbolTable2 = NULL;
 
 // identify the current scope of parsing
-int scopeLevel;
+ int scopeLevel;
 
+int reg = 0;
 
 // perform a dfs to the parse tree to generate machine code
 void generate_code(struct Node * n);
@@ -35,9 +39,22 @@ void variableHandler(char yytext[], char isConst);
 void
 validate_char(char * yytext);
 
+void make_dataSegment();
+
+void print_hashTable();
+
+void make_codeSegment(struct Node * tree);
+
 /*Edited Here*/
+void printTree(struct Node * n,int lvl,int from,int to,int num);
+struct Node* find_variable(char * txt);
 char * newstr(char * txt);// to create string 
+char * scope_resolution(char *txt);
 YYSTYPE Const;
+int sfrom=0,sto=1;
+int scopes[110][110];
+int ** scope_ptr;
+
 
 typedef enum {"==", ">=", "<=", "!="} logicalEnum;
 logicalEnum equalEqual = "==";
@@ -64,11 +81,11 @@ logicalEnum notEqual = "!=";
 %token <sval> STRING
 %token <iname> VARIABLE
 
-%token AOP LOP
+%token AOP LOP HAN3RF
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
-%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement
+%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement stmts
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
@@ -79,7 +96,7 @@ logicalEnum notEqual = "!=";
 	
 %%
     list 
-        : list statement {	generate_code($2); free_node($2);}
+        : list statement {	 make_codeSegment($2);}
         |
         ;
     
@@ -87,11 +104,16 @@ logicalEnum notEqual = "!=";
 		: assignment_statement
 		| declartion_statement
 		| expr ';'
-		;  
-		  
+		| '{' stmts '}' {$$=make_operation('s', 1, $2);}
+	    ;  
+	stmts:
+        statement     { $$ =  $1; }
+        | stmts statement        { $$ = make_operation(';', 2, $1, $2); }
+        ;
+   
 	assignment_statement
         : VARIABLE '=' assignment_expr ';' 			
-        	{variableHandler($1, 0); $$=make_operation( '=', 2, make_identifier($1), $3 );}
+        	{variableHandler(scope_resolution($1), 0); $$=make_operation( '=', 2, make_identifier($1), $3 );}
         | CONST VARIABLE '=' assignment_expr ';'    {variableHandler($2, 1); $$=make_identifier($2);}
 		;
 		
@@ -106,7 +128,7 @@ logicalEnum notEqual = "!=";
 		;
 		
 	declartion_statement
-		: VARIABLE ';'  {variableHandler($1, 0); $$=make_identifier($1);}
+		: HAN3RF VARIABLE ';'  {variableHandler(scope_resolution($2), 0); $$=make_identifier($2);}
 		;
 		
 	expr
@@ -119,6 +141,7 @@ logicalEnum notEqual = "!=";
 		    { (Const.dval=$1); $$= make_constant(Const,tDOUBLE);
 		    }
 		|
+		
 		expr "==" expr  
 		    {	
 				$$ = make_operation( equalEqual, 2, $1, $3 );
@@ -215,6 +238,59 @@ char * newstr(char * txt)
 * Generate assembly code for a hypothitical stack based machine
 * @param node in the parse tree
 **/
+struct Node* find_variable(char * txt)
+{
+	struct Symbol * temp;
+    
+    // look up the symbol table
+    HASH_FIND_STR(symbolTable, txt, temp);
+    if(!temp)return NULL;
+    struct Node* ret;
+    ret->id.name=temp->name;
+    return ret;
+
+}
+char * scope_resolution(char *txt)
+{
+	char tmp[50];
+	sprintf(tmp,"_%d%d%d",sfrom,sto,scopes[sfrom][sto]);
+	strcat(txt,tmp);
+	return txt;
+}
+void printTree(struct Node * n,int lvl,int from,int to,int num)
+{
+	if(n==NULL)return;
+	int i;
+	
+	for(i=0;i<lvl;i++)
+	{
+		printf("%3c",' ');
+	}
+	if(n->type==OPERATION)
+	{
+		if(n->opr.operation=='s')
+		{
+			printf("OP -> %c (%d,%d,%d)\n",n->opr.operation,from,to,scopes[from][to]);
+			printTree(n->opr.op[0],lvl+1,from+1,to+1,num);
+			printTree(n->opr.op[1],lvl+1,from+1,to+1,num);
+			
+		}
+		else
+		{
+			printf("OP -> %c\n",n->opr.operation);
+			printTree(n->opr.op[0],lvl+1,from,to,num);
+			printTree(n->opr.op[1],lvl+1,from,to,num);
+		}
+	}
+	else if(n->type==CONSTANT)
+	{
+		printf("const -> %d\n",n->con.ival);
+	}
+	else if(n->type==IDENTIFIER)
+	{
+		printf("identifier -> %s\n",n->id.name);
+	}
+}
 void generate_code(struct Node * n)
 {
     // check the type of the node
@@ -225,48 +301,86 @@ void generate_code(struct Node * n)
         case OPERATION:    
             switch(n->opr.operation)
             {
-            	
-            	default:
-            	    generate_code(n->opr.op[1]);
-            		generate_code(n->opr.op[0]);
-            		
-            		switch(n->opr.operation)
-            		{
+            			case ';':
+	            			generate_code(n->opr.op[0]);
+            				generate_code(n->opr.op[1]);
+            				break;
+            			case 's':
+	            			if(n->opr.op[0]!=NULL)
+	            			generate_code(n->opr.op[0]);
+	            			if(n->opr.op[1]!=NULL)
+            				generate_code(n->opr.op[1]);
+            				break;
             			case '=':
-            			    //generate_code(n->opr.op[0]);
-            			    printf("\n");
+            			    generate_code(n->opr.op[1]);
+            			    printf("MOV %s, R%d\n", n->opr.op[0]->id.name, reg);
             				break;
             			case '*':
-            				printf("MUL\nPOP\nPOP\nPUSH RR\n");
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("MUL R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;
 	            		case '+':
-            				printf("ADD ");//RR:result register
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("ADD R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;
             			case '-':
-            				printf("SUB\nPOP\nPOP\nPUSH RR\n");//RR:result register
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("SUB R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;	
             			case '/':
-            				printf("DIV\nPOP\nPOP\nPUSH RR\n");
+            				generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("DIV R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
             				break;
-            		}
+            		    case '|':
+            		        generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("OR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
+            		        break;
+            		    case '&':
+            		        generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("AND R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
+            		        break;
+            		    case '~':
+            				generate_code(n->opr.op[0]);
+            				printf("NEG R%d, R%d\n", reg-1, reg);
+            				reg -= 1;
+            		        break;
+            		    case '^':
+            		        generate_code(n->opr.op[1]);
+            				generate_code(n->opr.op[0]);
+            				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+            				reg -= 1;
+            		    case UMINUS:
+            		        break;
             }
-        break;
+            break;
         
         case IDENTIFIER:
-            printf("%s ", n->id.name);
+            printf("MOV %s, R%d\n", n->id.name, reg);
         break;
         
         case CONSTANT:
         	switch(n->con.type)
         	{
         		case tINT:
-        			printf("%d ",n->con.ival);
+        			reg += 1; printf("MOV R%d, %d\n",reg, n->con.ival);
         			break;
         		case tDOUBLE:
-        			printf("PUSH %lf\n",n->con.dval);
+        			reg += 1; printf("MOV R%d, %a\n",reg, n->con.dval);
         			break;
         		case tCHAR:
-        			printf("PUSH '%c'\n",n->con.cval);
+        			reg += 1; printf("MOV R%d, '%c'\n",reg, n->con.cval);
         			break;
         	}
         break;
@@ -408,10 +522,10 @@ void variableHandler(char yytext[], char isConst)
         if (temp->isConst == 1)
         {
             yyerror("attempt to assign a const variable");
-            //yyerrok;
         }
     }
 }
+
 
 // TODO: not sure if we need this
 void
@@ -426,14 +540,39 @@ validate_char(char * yytext)
 }
 
 
+// print the symbol table as a datasegment
+void make_dataSegment()
+{
+    
+    print_hashTable();
+}
 
+void print_hashTable()
+{
+    struct Symbol *s;
+    
+    printf("\n.data\n");
+    for(s=symbolTable; s != NULL; s=s->hh.next) {
+        printf("%s dd ?\n", s->name);
+    }
+}
+
+void make_codeSegment(struct Node * tree)
+{
+	
+    //printTree(tree,0,0,1,0);
+    generate_code(tree);
+    free_node(tree);
+}
 
 int
 main()
 {
-    // TODO: I think after doing yyparse, we should call the generate_code()
-    // and iterate over the symbolTable to make all variables say in a datasegment
-    return yyparse() ;
+    memset(scopes,0,sizeof(scopes));
+    printf("#c-- compiler\n");
+    if (yyparse() ==0)
+        make_dataSegment();
+    return 0;
 }
 
 yyerror(msg)

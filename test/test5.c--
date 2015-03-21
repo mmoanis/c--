@@ -1,0 +1,5 @@
+// check variable declerations
+
+han3rf varo1;
+han3rf varo2;
+varo3 = 4 + 2;

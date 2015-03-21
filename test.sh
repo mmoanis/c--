@@ -10,7 +10,7 @@ NC='\033[0m'        #normal
 lex c--.l
 yacc -d -v c--.y
 
-gcc lex.yy.c y.tab.c -o c--
+gcc -w lex.yy.c y.tab.c -o c--
 
 for testCase in test/*.c--; do
 
