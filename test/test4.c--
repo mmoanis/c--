@@ -1,8 +1,8 @@
 // generation of code of assignment statement
 {
-	han3rf x;
-	x =1;
-	y =0;
-	{z=2;}
-	{z=34;}
+han3rf x;
+x =1;
+han3rf y =0;
+{han3rf z=2;}
+{han3rf z=34;}
 }

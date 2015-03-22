@@ -1,0 +1,5 @@
+// variable assignment and declerations
+
+han3rf x = 1;
+han3rf y = x;
+const z = x + y;

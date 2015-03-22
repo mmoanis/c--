@@ -35,6 +35,7 @@ typedef struct {
 
 // identifier
 typedef struct {
+    char usage; //1 assigned to, 2 used
     char * name;    // name of the identifier, ie the key
 } IdentifierNodeType;
 

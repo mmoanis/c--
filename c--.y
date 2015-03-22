@@ -24,7 +24,7 @@ void generate_code(struct Node * n);
 /// functions to build the parse tree
 
 // handle a varialbe usage
-struct Node * make_identifier(char name[]);
+struct Node * make_identifier(char name[], char used);
 
 // handle a const usage
 struct Node * make_constant(YYSTYPE value, VariableType type);
@@ -34,7 +34,10 @@ struct Node * make_operation(int operation, int nOfOperands, ... );
 
 void free_node(struct Node * n);
 
-void variableHandler(char yytext[], char isConst);
+// def = 0 assignment to
+        //1 defination
+        //2 usage
+void variableHandler(char yytext[], char isConst, char def);
 
 void
 validate_char(char * yytext);
@@ -56,11 +59,7 @@ int scopes[110][110];
 int ** scope_ptr;
 
 
-enum logicalEnum {"==", ">=", "<=", "!="};
-logicalEnum equalEqual = "==";
-logicalEnum greaterThanEqual = ">=";
-logicalEnum lessThanEqual = "<=";
-logicalEnum notEqual = "!=";
+typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 /////////////////////////////////////////////////////////////////////////////
 %}
 
@@ -113,26 +112,28 @@ logicalEnum notEqual = "!=";
    
 	assignment_statement
         : VARIABLE '=' assignment_expr ';' 			
-        	{variableHandler(scope_resolution($1), 0); $$=make_operation( '=', 2, make_identifier($1), $3 );}
-        | CONST VARIABLE '=' assignment_expr ';'    {variableHandler($2, 1); $$=make_identifier($2);}
+        	{variableHandler(scope_resolution($1), 0, 0); $$=make_operation( '=', 2, make_identifier($1, 0), $3 );}
+        | CONST VARIABLE '=' assignment_expr ';'    {variableHandler(scope_resolution($2), 1, 1); $$=make_operation( '=', 2, make_identifier($2, 0), $4 );}
+        | HAN3RF VARIABLE '=' assignment_expr ';' {variableHandler(scope_resolution($2), 0, 1); $$=make_operation( '=', 2, make_identifier($2, 0), $4 );}
 		;
 		
 	assignment_expr
 		: expr 
-		| string_expr 
+		| string_expr
 		;
 		
 	string_expr
 		: STRING    { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
-		| CHAR 		{ (Const.cval=$1); $$=make_constant(Const,tCHAR);}
 		;
 		
 	declartion_statement
-		: HAN3RF VARIABLE ';'  {variableHandler(scope_resolution($2), 0); $$=make_identifier($2);}
+		: HAN3RF VARIABLE ';' {variableHandler(scope_resolution($2), 0, 1);}
 		;
 		
 	expr
 		:
+		VARIABLE {variableHandler(scope_resolution($1), 0, 2); $$=make_identifier($1, 1);}
+		|
 		INT	 
 		    { (Const.ival=$1); $$=make_constant(Const,tINT);
 		    }
@@ -141,25 +142,29 @@ logicalEnum notEqual = "!=";
 		    { (Const.dval=$1); $$= make_constant(Const,tDOUBLE);
 		    }
 		|
-		
+		CHAR
+		{
+		    { (Const.cval=$1); $$=make_constant(Const,tCHAR);}
+		}
+		|
 		expr "==" expr  
 		    {	
-				$$ = make_operation( equalEqual, 2, $1, $3 );
+				$$ = make_operation( EQ, 2, $1, $3 );
 		    }
 		|
 		expr "!=" expr  
 		    {	
-				$$ = make_operation( notEqual, 2, $1, $3 );
+				$$ = make_operation( NQ, 2, $1, $3 );
 		    }
 		|
 		expr "<=" expr  
 		    {	
-				$$ = make_operation( lessThanEqual, 2, $1, $3 );
+				$$ = make_operation( LQ, 2, $1, $3 );
 		    }
 		|
 		expr ">=" expr  
 		    {	
-				$$ = make_operation( greaterThanEqual, 2, $1, $3 );
+				$$ = make_operation( BQ, 2, $1, $3 );
 		    }
 		|
 		expr '<' expr  
@@ -293,6 +298,8 @@ void printTree(struct Node * n,int lvl,int from,int to,int num)
 }
 void generate_code(struct Node * n)
 {
+    if (n == NULL) return;  // in case there is no tree
+    
     // check the type of the node
     switch(n->type)
     {
@@ -362,11 +369,17 @@ void generate_code(struct Node * n)
             				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
             				reg -= 1;
             		    case UMINUS:
+            		        generate_code(n->opr.op[0]);
+            				printf("NEG R%d, R%d\n", reg-1, reg);
+            				reg -= 1;
             		        break;
             }
             break;
         
         case IDENTIFIER:
+            if (n->id.usage == 1)
+            {   reg+=1; printf("MOV R%d, %s\n", reg, n->id.name);   }
+            else
             printf("MOV %s, R%d\n", n->id.name, reg);
         break;
         
@@ -377,7 +390,7 @@ void generate_code(struct Node * n)
         			reg += 1; printf("MOV R%d, %d\n",reg, n->con.ival);
         			break;
         		case tDOUBLE:
-        			reg += 1; printf("MOV R%d, %a\n",reg, n->con.dval);
+        			reg += 1; printf("MOV R%d, %f\n",reg, n->con.dval);
         			break;
         		case tCHAR:
         			reg += 1; printf("MOV R%d, '%c'\n",reg, n->con.cval);
@@ -392,7 +405,7 @@ void generate_code(struct Node * n)
 }
 
 // handle a varialbe usage
-struct Node * make_identifier(char name[])
+struct Node * make_identifier(char name[], char used)
 {
     struct Node *n;
     size_t nodeSize;
@@ -405,6 +418,9 @@ struct Node * make_identifier(char name[])
         
     /* copy information */
     n->type = IDENTIFIER;
+    
+    if (used == 1)   n->id.usage = 1;
+    else n->id.usage = 0;
     
     n->id.name=newstr(name);
     //strcpy(n->id.name, name);
@@ -499,14 +515,14 @@ void free_node(struct Node * n)
 
 // check if the varialbe exits, or
 // create a new entry in hashtable and save the reference to it
-void variableHandler(char yytext[], char isConst)
+void variableHandler(char yytext[], char isConst, char def)
 {
     struct Symbol * temp;
     
     // look up the symbol table
     HASH_FIND_STR(symbolTable, yytext, temp);
     
-    if (!temp)
+    if (!temp && def == 1)
     {
         // create an entry for the variable
         temp = ( struct Symbol*)malloc(sizeof( struct Symbol));
@@ -517,11 +533,21 @@ void variableHandler(char yytext[], char isConst)
         // add to hashtable
         HASH_ADD_STR( symbolTable, name, temp );
     }
-    else
+    else if (!temp && def != 1)
     {
-        if (temp->isConst == 1)
+        yyerror("undeclared variable, first use in scope");
+    }
+    else if (temp)
+    {
+        
+        // check the constants
+        if (def == 0 && temp->isConst == 1)
         {
             yyerror("attempt to assign a const variable");
+        }
+        else if (def == 1)
+        {
+            yyerror("variable alread defined in the scope");
         }
     }
 }
@@ -568,6 +594,10 @@ void make_codeSegment(struct Node * tree)
 int
 main()
 {
+    #if YYDEBUG
+        yydebug = 1;
+    #endif
+    
     memset(scopes,0,sizeof(scopes));
     printf("#c-- compiler\n");
     if (yyparse() ==0)
