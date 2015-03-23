@@ -84,7 +84,7 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
-%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement stmts
+%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement 
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
@@ -96,20 +96,18 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 %%
     list 
         : list statement {	 make_codeSegment($2);}
-        |
+        | 
         ;
     
     statement
 		: assignment_statement
 		| declartion_statement
 		| expr ';'
-		| '{' stmts '}' {$$=make_operation('s', 1, $2);}
+		| '}'{$$=NULL;}
+		| '{' {$$=NULL;}
 	    ;  
-	stmts:
-        statement     { $$ =  $1; }
-        | stmts statement        { $$ = make_operation(';', 2, $1, $2); }
-        ;
-   
+	
+
 	assignment_statement
         : VARIABLE '=' assignment_expr ';' 			
         	{variableHandler(scope_resolution($1), 0, 0); $$=make_operation( '=', 2, make_identifier($1, 0), $3 );}
@@ -127,7 +125,7 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 		;
 		
 	declartion_statement
-		: HAN3RF VARIABLE ';' {variableHandler(scope_resolution($2), 0, 1);}
+		: HAN3RF VARIABLE ';' {variableHandler(scope_resolution($2), 0, 1);$$=NULL;}
 		;
 		
 	expr
@@ -589,6 +587,7 @@ void make_codeSegment(struct Node * tree)
     //printTree(tree,0,0,1,0);
     generate_code(tree);
     free_node(tree);
+    //printf("#------------------------\n");
 }
 
 int

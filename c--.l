@@ -20,7 +20,7 @@ _OTHERS      [:=();\-+*~|&^\/]
 
 %%
 "{" 			{sfrom++;sto++;++scopes[sfrom][sto];return '{';}
-"}" 			{sfrom--;sto--;;return '}';}
+"}" 			{sfrom--;sto--;return '}';}
 han3rf 		{return HAN3RF;}
 true	    {return (TRUE); }
 

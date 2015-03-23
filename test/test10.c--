@@ -1,5 +1,4 @@
 // mathmatical exp. insides scopes
-
 {
 	han3rf x;
 	x=2*(3-4)/2;

@@ -3,6 +3,8 @@
 han3rf x;
 x =1;
 han3rf y =0;
-{han3rf z=2;}
-{han3rf z=34;}
+{han3rf z=34;
+}
+{han3rf z=2;
+}
 }
