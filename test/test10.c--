@@ -7,7 +7,7 @@
 		han3rf x=2*3+(4/5)^2;
 		han3rf y=2*x+3;
 		{
-			z=2;
+			han3rf z=2;
 			z=z+2;
 		}
 		{
@@ -18,7 +18,7 @@
 		han3rf x=2*3+(4/5)^2;
 		han3rf y=2*x+3;
 		{
-			z=2;
+			han3rf z=2;
 			z=z+2;
 		}
 		{

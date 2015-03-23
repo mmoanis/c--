@@ -366,6 +366,7 @@ void generate_code(struct Node * n)
             				generate_code(n->opr.op[0]);
             				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
             				reg -= 1;
+            				break;
             		    case UMINUS:
             		        generate_code(n->opr.op[0]);
             				printf("NEG R%d, R%d\n", reg-1, reg);
