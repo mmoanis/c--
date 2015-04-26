@@ -50,7 +50,6 @@ void make_codeSegment(struct Node * tree);
 
 /*Edited Here*/
 void printTree(struct Node * n,int lvl,int from,int to,int num);
-struct Node* find_variable(char * txt);
 char * newstr(char * txt);// to create string
 char * scope_resolution(char *txt);
 YYSTYPE Const;
@@ -291,21 +290,7 @@ char * newstr(char * txt)
 	return ret;
 }
 
-/**
-*
-**/
-struct Node* find_variable(char * txt)
-{
-	struct Symbol * temp;
 
-    // look up the symbol table
-    HASH_FIND_STR(symbolTable, txt, temp);
-    if(!temp)return NULL;
-    struct Node* ret;
-    ret->id.name=temp->name;
-    return ret;
-
-}
 char * scope_resolution(char *txt)
 {
 	char tmp[50];
@@ -381,6 +366,7 @@ void generate_code(struct Node * n)
                         else
                             default_exists = 0;
 
+                        
                         break;
                     case CASE:
                         printf("L%d:\n", labl1);
