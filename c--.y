@@ -59,6 +59,8 @@ int scopes[110][110];
 int ** scope_ptr;
 
 int labl1=0, labl2=0;
+int default_exists = 0;
+int reg_switch_case = 0;
 
 typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 /////////////////////////////////////////////////////////////////////////////
@@ -85,7 +87,7 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
-%type <node_ptr> list statement statement_list parantasis_statement assignment_statement expr assignment_expr string_expr declartion_statement control_statement jump_statement labeled_statement const_value
+%type <node_ptr> list statement dep_parantasis_statement dep_statement_list dependent_statement statement_list parantasis_statement assignment_statement expr assignment_expr string_expr declartion_statement control_statement jump_statement labeled_statement const_value
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
@@ -101,14 +103,31 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
         ;
 
     statement
-		: assignment_statement
-		| declartion_statement
-        | control_statement
-        | labeled_statement
-        | parantasis_statement
-        | jump_statement
-		| expr ';'
+		: assignment_statement    {$$=$1;}
+		| declartion_statement    {$$=$1;}
+        | control_statement {$$=$1;}
+        | parantasis_statement  {$$=$1;}
+		| expr ';'    {$$=$1;}
 	    ;
+
+    dependent_statement
+        :   labeled_statement   {$$=$1;}
+        |   jump_statement  {$$=$1;}
+        | assignment_statement    {$$=$1;}
+		| declartion_statement    {$$=$1;}
+        | control_statement {$$=$1;}
+        | expr ';'    {$$=$1;}
+        | dep_parantasis_statement {$$=$1;}
+        ;
+
+    dep_parantasis_statement
+        : '{' dep_statement_list '}'   {$$=$2;}
+        ;
+
+    dep_statement_list
+        : dependent_statement {$$=$1;}
+        | dep_statement_list dependent_statement  {$$=make_operation('s', 2, $1, $2);}
+        ;
 
     parantasis_statement
             : '{' statement_list '}'   {$$=$2;}
@@ -119,7 +138,7 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
         ;
 
     control_statement
-        : SWITCH '(' VARIABLE ')' statement { variableHandler(scope_resolution($3), 0, 2);  $$ = make_operation(SWITCH, 2, make_identifier($3, 1), $5 );   }
+        : SWITCH '(' VARIABLE ')' dependent_statement { variableHandler(scope_resolution($3), 0, 2);  $$ = make_operation(SWITCH, 2, make_identifier($3, 1), $5 );   }
         ;
 
     jump_statement
@@ -128,7 +147,7 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 
     labeled_statement
         : CASE const_value ':' statement    {   $$ = make_operation(CASE, 2, $2, $4);  }
-        | DEFAULT ':' statement {   $$ = make_operation(DEFAULT, 1, $3);  }
+        | DEFAULT ':' statement {  default_exists=1; $$ = make_operation(DEFAULT, 1, $3);  }
         ;
 
 
@@ -340,97 +359,119 @@ void generate_code(struct Node * n)
         case OPERATION:
             switch(n->opr.operation)
             {
-                        case SWITCH:
-                            //printf("aaaaaaaaaaaaaaaaaa\n");
-                            generate_code(n->opr.op[0]);
-                            //printf("XXXXXXXXXXXXXx\n");
-                            generate_code(n->opr.op[1]);
-                            printf("XL%d:\n", labl2);  // labl2 marks the end of switch statement, to be used by break
-                            labl2+= 1;
-                            break;
-                        case CASE:
-                            generate_code(n->opr.op[0]);
-                            printf("CMP R%d, R%d\n", reg, reg-1);
-                            printf("JNE L%d\n", labl1);
-                            generate_code(n->opr.op[1]);
-                            printf("L%d:\n", labl1);
-                            labl1+= 1;
-                            break;
-                        case BREAK:
-                            printf("JMP LL%d:\n", labl2);
-                            break;
-                        case DEFAULT:
-                            generate_code(n->opr.op[0]);
-                            break;
-            			case ';':
-	            			generate_code(n->opr.op[0]);
-            				generate_code(n->opr.op[1]);
-            				break;
+                    case SWITCH:
+                        // move the switch variable to a register
+                        generate_code(n->opr.op[0]);
+                        reg_switch_case = reg;
 
-                        // dummy operation for joining to statements together
-                        // see statement_list grammer
-            			case 's':
-	            			if(n->opr.op[0]!=NULL)
-	            			generate_code(n->opr.op[0]);
-	            			if(n->opr.op[1]!=NULL)
-            				generate_code(n->opr.op[1]);
-            				break;
-            			case '=':
-            			    generate_code(n->opr.op[1]);
-            			    printf("MOV %s, R%d\n", n->opr.op[0]->id.name, reg);
-            				break;
-            			case '*':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("MUL R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-	            		case '+':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("ADD R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            			case '-':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("SUB R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            			case '/':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("DIV R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            		    case '|':
-            		        generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("OR R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            		        break;
-            		    case '&':
-            		        generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("AND R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            		        break;
-            		    case '~':
-            				generate_code(n->opr.op[0]);
-            				printf("NEG R%d, R%d\n", reg-1, reg);
-            				reg -= 1;
-            		        break;
-            		    case '^':
-            		        generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            		    case UMINUS:
-            		        generate_code(n->opr.op[0]);
-            				printf("NEG R%d, R%d\n", reg-1, reg);
-            				reg -= 1;
-            		        break;
+                        // generate the switch body
+                        generate_code(n->opr.op[1]);
+
+                        // label the end of the switch statement
+                        printf("LL%d:\n", labl2);  // labl2 marks the end of switch statement, to be used by break
+                        labl2+= 1;
+
+                        // in case of a missing default statement
+                        // print the last label that was placed by a case
+                        // statement
+                        if (default_exists == 0)
+                        {
+                            printf("L%d:\n", labl1);
+                        }
+                        else
+                            default_exists = 0;
+
+                        break;
+                    case CASE:
+                        printf("L%d:\n", labl1);
+
+
+                        // move variable to register
+                        generate_code(n->opr.op[0]);
+
+                        // compare it
+                        printf("CMP R%d, R%d\n", reg, reg_switch_case);
+                        printf("JNE L%d\n", labl1 + 1);
+                        generate_code(n->opr.op[1]);
+
+                        labl1+= 1;
+                        break;
+                    case BREAK:
+                        printf("JMP LL%d:\n", labl2);
+                        break;
+                    case DEFAULT:
+                        printf("L%d:\n", labl1);
+                        generate_code(n->opr.op[0]);
+                        break;
+        			case ';':
+            			generate_code(n->opr.op[0]);
+        				generate_code(n->opr.op[1]);
+        				break;
+
+                    // dummy operation for joining to statements together
+                    // see statement_list grammer
+        			case 's':
+            			if(n->opr.op[0]!=NULL)
+            			generate_code(n->opr.op[0]);
+            			if(n->opr.op[1]!=NULL)
+        				generate_code(n->opr.op[1]);
+        				break;
+        			case '=':
+        			    generate_code(n->opr.op[1]);
+        			    printf("MOV %s, R%d\n", n->opr.op[0]->id.name, reg);
+        				break;
+        			case '*':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("MUL R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+            		case '+':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("ADD R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        			case '-':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("SUB R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        			case '/':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("DIV R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        		    case '|':
+        		        generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("OR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        		        break;
+        		    case '&':
+        		        generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("AND R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        		        break;
+        		    case '~':
+        				generate_code(n->opr.op[0]);
+        				printf("NEG R%d, R%d\n", reg-1, reg);
+        				reg -= 1;
+        		        break;
+        		    case '^':
+        		        generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        		    case UMINUS:
+        		        generate_code(n->opr.op[0]);
+        				printf("NEG R%d, R%d\n", reg-1, reg);
+        				reg -= 1;
+        		        break;
             }
             break;
 
@@ -463,6 +504,7 @@ void generate_code(struct Node * n)
 }
 
 // handle a varialbe usage
+// @param used either 1 or 0, 1 if the variable is read, 0 if its assigned
 struct Node * make_identifier(char name[], char used)
 {
     struct Node *n;
@@ -486,6 +528,8 @@ struct Node * make_identifier(char name[], char used)
 }
 
 // handle a const usage
+// @param value actual value of the const, use the 'Const' varialbe to allocate it
+// @param type of the variable
 struct Node * make_constant(YYSTYPE value, VariableType type)
 {
     struct Node * n;
