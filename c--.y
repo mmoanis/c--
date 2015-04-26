@@ -366,7 +366,7 @@ void generate_code(struct Node * n)
                         else
                             default_exists = 0;
 
-                        
+                        reg -= 1;
                         break;
                     case CASE:
                         printf("L%d:\n", labl1);
