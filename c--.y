@@ -535,7 +535,21 @@ void variableHandler(char yytext[], char isConst, char def)
     }
     else if (!temp && def != 1)
     {
-        yyerror("undeclared variable, first use in scope");
+        // check for a more global defination
+
+        int length = strlen(yytext);
+        char * global = newstr(yytext);
+        global[length-1] = '0';
+        global[length-2] = '1';
+        global[length-3] = '0';
+
+        // look up the symbol table
+        HASH_FIND_STR(symbolTable, global, temp);
+        //yyerror(global);
+        if (!temp)
+            yyerror("undeclared variable, first use in scope");
+        else
+            strcpy(yytext, global);
     }
     else if (temp)
     {
@@ -581,7 +595,7 @@ char validate_char(char * yytext)
                 return '\b';
 
             default:
-                return '\0'
+                return '\0';
                 yyerror("undefinded character literal.");
 
         }
