@@ -29,7 +29,7 @@ false	    {return (FALSE); }
 switch      {return (SWITCH); }
 
 case        {return (CASE); }
-        
+
 break     {return (BREAK); }
 
 continue    {return (CONTINUE); }
@@ -40,9 +40,9 @@ const       {return (CONST); }
 
 
 if          {return (IF); }
-			
+
 else        {return (ELSE); }
-			
+
 elsif       {return (ELSIF); }
 
 
@@ -63,7 +63,7 @@ not         {return (NOT);  }
 
 {_STRING}    { yylval.sval = yytext; return (STRING); }
 
-{_CHAR}      { yylval.cval = *yytext; return (CHAR); }
+{_CHAR}      { yylval.cval = validate_char(yytext); return (CHAR); }
 
 {_VARIABLE}  {yylval.iname=newstr(yytext); return (VARIABLE); }
 
@@ -76,4 +76,3 @@ not         {return (NOT);  }
 <<EOF>>     {printf("#(eof %u)\n", yylineno); return 0;}
 
 %%
-
