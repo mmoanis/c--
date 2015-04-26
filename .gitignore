@@ -6,3 +6,4 @@ test.cpp
 lex.yy.c
 c--
 y.output
+*.pdf
