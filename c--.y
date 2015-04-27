@@ -57,9 +57,7 @@ int sfrom=0,sto=1;
 int scopes[110][110];
 int ** scope_ptr;
 
-int labl1=0, labl2=0;
-int default_exists = 0;
-int reg_switch_case = 0;
+int labl=0;
 
 typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 /////////////////////////////////////////////////////////////////////////////
@@ -158,8 +156,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 		;
 
 	assignment_expr
-		: expr
-		| string_expr
+		: expr    {$$=$1;}
+		| string_expr {$$=$1;}
 		;
 
     const_value
@@ -336,6 +334,8 @@ void generate_code(struct Node * n)
 {
     if (n == NULL) return;  // in case there is no tree
 
+    //int labl1, labl2;
+
     // check the type of the node
     switch(n->type)
     {
@@ -346,53 +346,46 @@ void generate_code(struct Node * n)
             {
                     case SWITCH:
                         // move the switch variable to a register
-                        generate_code(n->opr.op[0]);
-                        reg_switch_case = reg;
+                        //generate_code(n->opr.op[0]);
+                        //reg_switch_case = reg;
 
                         // generate the switch body
-                        generate_code(n->opr.op[1]);
+                        //generate_code(n->opr.op[1]);
 
                         // label the end of the switch statement
-                        printf("LL%d:\n", labl2);  // labl2 marks the end of switch statement, to be used by break
-                        labl2+= 1;
+                        //printf("LL%d:\n", labl2);  // labl2 marks the end of switch statement, to be used by break
+                        //labl2+= 1;
 
                         // in case of a missing default statement
                         // print the last label that was placed by a case
                         // statement
-                        if (default_exists == 0)
-                        {
-                            printf("L%d:\n", labl1);
-                        }
-                        else
-                            default_exists = 0;
+                        //if (default_exists == 0)
+                        //{
+                        //    printf("L%d:\n", labl1);
+                        //}
+                        //else
+                        //    default_exists = 0;
 
-                        reg -= 1;
+                        //reg -= 1;
                         break;
                     case CASE:
-                        printf("L%d:\n", labl1);
-
+                        //printf("L%d:\n", labl1 = labl++);
 
                         // move variable to register
-                        generate_code(n->opr.op[0]);
+                        //generate_code(n->opr.op[0]);
 
                         // compare it
-                        printf("CMP R%d, R%d\n", reg, reg_switch_case);
-                        printf("JNE L%d\n", labl1 + 1);
-                        generate_code(n->opr.op[1]);
-
-                        labl1+= 1;
+                        //printf("CMP R%d, R%d\n", reg, reg_switch_case);
+                        //printf("JNE L%d\n", labl1);
+                        //generate_code(n->opr.op[1]);
                         break;
                     case BREAK:
-                        printf("JMP LL%d:\n", labl2);
+                        //printf("JMP LL%d:\n", labl2);
                         break;
                     case DEFAULT:
-                        printf("L%d:\n", labl1);
-                        generate_code(n->opr.op[0]);
+                        //printf("L%d:\n", labl1);
+                        //generate_code(n->opr.op[0]);
                         break;
-        			case ';':
-            			generate_code(n->opr.op[0]);
-        				generate_code(n->opr.op[1]);
-        				break;
 
                     // dummy operation for joining to statements together
                     // see statement_list grammer
