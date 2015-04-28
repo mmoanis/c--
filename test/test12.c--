@@ -12,6 +12,7 @@ switch (x)
                 break;
             default:
                 han3rf yy = 3;
+                break;
         }
         break;
 
