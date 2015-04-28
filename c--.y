@@ -392,7 +392,7 @@ void generate_code(struct Node * n)
     if (n == NULL) return;  // in case there is no tree
 
     //int labl1, labl2;
-    int ca;
+    int ca, labl2;
     // check the type of the node
     switch(n->type)
     {
@@ -410,25 +410,23 @@ void generate_code(struct Node * n)
                         generate_code(n->opr.op[1]);
 
                         // label the end of the switch statement
-                        printf("Labell%d:\n", labll--);
+                        printf("switch_labl%d:\n", labll--);
                         //labl2+= 1;
 
                         reg -= 1;
                         break;
                     case CASE:
-                        //printf("L%d:\n", labl1 = labl++);
-                        printf("Label%d:\n", labl--);
-
                         generate_code(n->opr.op[1]);
                         if (n->opr.op[2] != NULL)
                             generate_code(n->opr.op[2]);
                         break;
-                    case BREAK:
-                        printf("JMP Labell%d\n", labll);
-                        break;
+
                     case DEFAULT:
-                        //printf("L%d:\n", labl1);
-                        //generate_code(n->opr.op[0]);
+                        //printf("case_labl%d:\n", labl--);
+                        generate_code(n->opr.op[0]);
+                        break;
+                    case BREAK:
+                        printf("JMP switch_labl%d\n", labll);
                         break;
 
                     case 'c':
@@ -439,25 +437,28 @@ void generate_code(struct Node * n)
 
                         // generate the code of case statements conditions first
                         for (ca = 0; ca <2; ca++)
-                            if (n->opr.op[ca] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == CASE)
+                            if (n->opr.op[ca]->opr.op[0] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == CASE)
                             {
                                 //printf("#CASEHEADER %d\n", labl++);
                                 generate_code(n->opr.op[ca]->opr.op[0]);
                                 // compare it
                                 printf("CMP R%d, R%d\n", reg-1, reg);
-                                printf("JE Label%d\n", labl + 1);
-                                labl++;
+                                printf("JE case_labl%d\n", labl2 = labl++);
                                 reg -= 1;
                             }
-                            else if (n->opr.op[ca] != NULL)
+                            else if (n->opr.op[ca]->opr.op[0] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == DEFAULT)
                             {
-                                generate_code(n->opr.op[ca]);
+                                printf("JMP case_labl%d\n", labl2 = labl++);
+                                labl++;
                             }
 
                         // generate the code of case statements body
-                        for (ca = 0; ca <2; ca++)
+                        for (ca = 1; ca >=0; ca--)
                             if (n->opr.op[ca] != NULL )
+                            {
+                                printf("case_labl%d:\n", labl2--);
                                 generate_code(n->opr.op[ca]);
+                            }
 
 
                         break;
