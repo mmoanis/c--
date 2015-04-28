@@ -97,7 +97,7 @@ void print_hashTable();
 void make_codeSegment(struct Node * tree);
 
 // missing documentation!
-void printTree(struct Node * n,int lvl,int from,int to,int num
+void printTree(struct Node * n,int lvl,int from,int to,int num);
 
 // safe way to assign a char sequence another to the value of other one
 //
@@ -410,24 +410,14 @@ void generate_code(struct Node * n)
                         generate_code(n->opr.op[1]);
 
                         // label the end of the switch statement
-                        printf("END:\n");  // labl2 marks the end of switch statement, to be used by break
+                        printf("END:\n", labl);
                         //labl2+= 1;
 
-                        // in case of a missing default statement
-                        // print the last label that was placed by a case
-                        // statement
-                        //if (default_exists == 0)
-                        //{
-                        //    printf("L%d:\n", labl1);
-                        //}
-                        //else
-                        //    default_exists = 0;
-
-                        //reg -= 1;
+                        reg -= 1;
                         break;
                     case CASE:
                         //printf("L%d:\n", labl1 = labl++);
-                        printf("#CASEBODY\n");
+                        printf("#CASEBODY %d\n", labl--);
 
                         generate_code(n->opr.op[1]);
                         if (n->opr.op[2] != NULL)
@@ -442,21 +432,28 @@ void generate_code(struct Node * n)
                         break;
 
                     case 'c':
+                        // case statement special operations
+                        // that connect list of case statements that follows
+                        // each other. Goal here is to make all conditions first
+                        // then followed by the body of the case statements
 
+                        // generate the code of case statements conditions first
                         for (ca = 0; ca <2; ca++)
                             if (n->opr.op[ca] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == CASE)
                             {
-                                printf("#CASEHEADER\n");
+                                printf("#CASEHEADER %d\n", labl++);
                                 generate_code(n->opr.op[ca]->opr.op[0]);
                                 // compare it
-                                printf("CMP R%d, R%d\n", reg, reg);
-                                printf("JNE L\n");
+                                printf("CMP R%d, R%d\n", reg-1, reg);
+                                printf("JNE L%d\n", labl);
+                                reg -= 1;
                             }
                             else if (n->opr.op[ca] != NULL)
                             {
                                 generate_code(n->opr.op[ca]);
                             }
 
+                        // generate the code of case statements body
                         for (ca = 0; ca <2; ca++)
                             if (n->opr.op[ca] != NULL )
                                 generate_code(n->opr.op[ca]);
