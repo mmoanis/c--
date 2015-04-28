@@ -6,6 +6,7 @@
 #include "symbolTable.h"
 #include "y.tab.h"
 
+// line number in input file
 extern int yylineno;
 
 
@@ -14,45 +15,109 @@ struct Symbol * symbolTable = NULL;
 struct Symbol * symbolTable2 = NULL;
 
 // identify the current scope of parsing
- int scopeLevel;
+int scopeLevel;
 
+// current available register to use in generate_code()
+// its the resposnibility of the user to increment or decrement
+// the value of the available register
 int reg = 0;
 
-// perform a dfs to the parse tree to generate machine code
+// given a node, generate the code according to the parse tree
+// -n tree head
 void generate_code(struct Node * n);
 
-/// functions to build the parse tree
-
-// handle a varialbe usage
+// makes a variable node in the parse tree, use it in grammer rules
+// when the rule refers to a variable. The node created will especify
+// how the asembly code will be generated according to the usage of the
+// variable
+//
+// -name: name of the varialbe to be stored in the node
+// -used: 1 if the variable is read, 0 if its assigned
+//
+// returns: node pointer to a variable node
 struct Node * make_identifier(char name[], char used);
 
-// handle a const usage
+// makes a const value node in the parse tree, use it in grammer rules
+// when the rule refers to a variable. The node created will especify
+// how the asembly code will be generated according to the type of const
+//
+// -value: actual value of variable
+// -type: type of variable
+//
+// returns: node pointer to a const node
 struct Node * make_constant(YYSTYPE value, VariableType type);
 
-// handle an operation
+// makes an operation node in the parse tree, use in grammer rules
+// when the rule refers to an operation. Also you can make special
+// operations for statement_lists to treat them differently. The
+// node created will especify how the asembly code will be generated
+// according to the type of operation.
+//
+// -operation: operation number, use operation ASCII or Enums from lexxer
+// -nOfOperands: number of operands to specify the size of variable argument list
+// -argument list: arguments of the operations, must be same number of nOfOperands
+//
+// returns: node pointer to an operation
 struct Node * make_operation(int operation, int nOfOperands, ... );
 
+// free the tree of nodes
+//
+// -n: tree root
 void free_node(struct Node * n);
 
 // def = 0 assignment to
         //1 defination
         //2 usage
+
+// creates or checks the existance of variables in symbol table.
+// this function will raise yyerrors in case of variable error.
+// variable could be new one to be added, const variable used,
+// undeclared variable, or reference to a global variable (see issue#13)
+//
+// -yytext: variable name, call scope_handler(yytext) first to resolve variable scope
+// -isConst: 1 if variable is const
+// - def: 0 if variable is assigned, 1 if its decleration of variable or
+//      2 if variable is read
+//
+// notes: see issue#13
 void variableHandler(char yytext[], char isConst, char def);
 
 void
 validate_char(char * yytext);
 
+// print the variables in symbol table to the output stream
 void make_dataSegment();
 
+// missing documentation!
 void print_hashTable();
 
+// print the equivalent assembly code of a given parse tree
+//
+// -tree: parse tree root
 void make_codeSegment(struct Node * tree);
 
-/*Edited Here*/
-void printTree(struct Node * n,int lvl,int from,int to,int num);
-char * newstr(char * txt);// to create string
+// missing documentation!
+void printTree(struct Node * n,int lvl,int from,int to,int num
+
+// safe way to assign a char sequence another to the value of other one
+//
+// -txt: char sequence to be copied
+//
+// returns: char sequence with same value as txt
+char * newstr(char * txt);
+
+// resolve the scope of a give  by prefixing its name with its scope
+// information
+//
+// -txt: variable name
+//
+// returns: new variable name that specifies its scope information
 char * scope_resolution(char *txt);
+
+// const value holder
 YYSTYPE Const;
+
+
 int sfrom=0,sto=1;
 int scopes[110][110];
 int ** scope_ptr;
