@@ -1,0 +1,24 @@
+// multiple default labels
+
+switch (x)
+{
+    default:
+        han3rf o = 4-5;
+        break;
+    case 4:
+        switch(x)
+        {
+            default:
+                han3rf y = 4-5;
+                break;
+            default:
+                han3rf yy = 3;
+                break;
+        }
+        break;
+
+    default:
+        han3rf e = 4-5;
+        break;
+
+}

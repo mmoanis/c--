@@ -6,6 +6,7 @@
 #include "symbolTable.h"
 #include "y.tab.h"
 
+// line number in input file
 extern int yylineno;
 
 
@@ -14,51 +15,114 @@ struct Symbol * symbolTable = NULL;
 struct Symbol * symbolTable2 = NULL;
 
 // identify the current scope of parsing
- int scopeLevel;
+int scopeLevel;
 
+// current available register to use in generate_code()
+// its the resposnibility of the user to increment or decrement
+// the value of the available register
 int reg = 0;
 
-// perform a dfs to the parse tree to generate machine code
+// given a node, generate the code according to the parse tree
+// -n tree head
 void generate_code(struct Node * n);
 
-/// functions to build the parse tree
-
-// handle a varialbe usage
+// makes a variable node in the parse tree, use it in grammer rules
+// when the rule refers to a variable. The node created will especify
+// how the asembly code will be generated according to the usage of the
+// variable
+//
+// -name: name of the varialbe to be stored in the node
+// -used: 1 if the variable is read, 0 if its assigned
+//
+// returns: node pointer to a variable node
 struct Node * make_identifier(char name[], char used);
 
-// handle a const usage
+// makes a const value node in the parse tree, use it in grammer rules
+// when the rule refers to a variable. The node created will especify
+// how the asembly code will be generated according to the type of const
+//
+// -value: actual value of variable
+// -type: type of variable
+//
+// returns: node pointer to a const node
 struct Node * make_constant(YYSTYPE value, VariableType type);
 
-// handle an operation
+// makes an operation node in the parse tree, use in grammer rules
+// when the rule refers to an operation. Also you can make special
+// operations for statement_lists to treat them differently. The
+// node created will especify how the asembly code will be generated
+// according to the type of operation.
+//
+// -operation: operation number, use operation ASCII or Enums from lexxer
+// -nOfOperands: number of operands to specify the size of variable argument list
+// -argument list: arguments of the operations, must be same number of nOfOperands
+//
+// returns: node pointer to an operation
 struct Node * make_operation(int operation, int nOfOperands, ... );
 
+// free the tree of nodes
+//
+// -n: tree root
 void free_node(struct Node * n);
 
-// def = 0 assignment to
-//1 defination
-//2 usage
+// creates or checks the existance of variables in symbol table.
+// this function will raise yyerrors in case of variable error.
+// variable could be new one to be added, const variable used,
+// undeclared variable, or reference to a global variable (see issue#13)
+//
+// -yytext: variable name, call scope_handler(yytext) first to resolve variable scope
+// -isConst: 1 if variable is const
+// - def: 0 if variable is assigned, 1 if its decleration of variable or
+//      2 if variable is read
+//
+// notes: see issue#13
 void variableHandler(char yytext[], char isConst, char def);
 
 // read char data from a string
 // eg: "'4'" = '4'
 char validate_char(char * yytext);
 
+// print the variables in symbol table to the output stream
 void make_dataSegment();
 
+// missing documentation!
 void print_hashTable();
 
+// print the equivalent assembly code of a given parse tree
+//
+// -tree: parse tree root
 void make_codeSegment(struct Node * tree);
 
-/*Edited Here*/
+// missing documentation!
 void printTree(struct Node * n,int lvl,int from,int to,int num);
-struct Node* find_variable(char * txt);
-char * newstr(char * txt);// to create string
+
+// safe way to assign a char sequence another to the value of other one
+//
+// -txt: char sequence to be copied
+//
+// returns: char sequence with same value as txt
+char * newstr(char * txt);
+
+// resolve the scope of a give  by prefixing its name with its scope
+// information
+//
+// -txt: variable name
+//
+// returns: new variable name that specifies its scope information
 char * scope_resolution(char *txt);
+
+// const value holder
 YYSTYPE Const;
+
+
 int sfrom=0,sto=1;
 int scopes[110][110];
 int ** scope_ptr;
 
+int labl=0, labll=0;
+
+// make sure only 1 default at maximum appears in switch body
+int default_walker=-1, number_default[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 /////////////////////////////////////////////////////////////////////////////
@@ -85,7 +149,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
-%type <node_ptr> list statement assignment_statement expr assignment_expr string_expr declartion_statement
+%type <node_ptr> list statement switch_body_statement case_list_statement case_statement statement_list parantasis_statement assignment_statement expr assignment_expr
+%type <node_ptr> string_expr declartion_statement control_statement jump_statement const_value
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
@@ -97,17 +162,49 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 %%
     list
         : list statement {	 make_codeSegment($2);}
-        |
+        | {$$=NULL;}
         ;
 
     statement
-		: assignment_statement
-		| declartion_statement
-		| expr ';'
-		| '}'{$$=NULL;}
-		| '{' {$$=NULL;}
+		: assignment_statement        {$$=$1;}
+		| declartion_statement        {$$=$1;}
+        | control_statement           {$$=$1;}
+        | parantasis_statement        {$$=$1;}
+		| expr ';'                    {$$=$1;}
 	    ;
 
+    switch_body_statement
+        :   case_statement             {$$=$1;}
+        | '{' case_list_statement '}'  {$$=$2;}
+        ;
+
+    case_list_statement
+        : case_statement                        {$$ = $1;}
+        | case_list_statement case_statement    {$$ = make_operation('c', 2, $1, $2);}
+        ;
+
+    case_statement
+        : CASE const_value ':' statement  jump_statement ';'  {   $$ = make_operation(CASE, 3, $2, $4, $5);  }
+        | DEFAULT ':' statement jump_statement ';'               {   $$ = make_operation(DEFAULT, 2, $3, $4);  }
+        ;
+
+    parantasis_statement
+        : '{' statement_list '}'   {$$=$2;}
+        ;
+
+    statement_list
+        : statement {$$=$1;}
+        | statement_list statement  {$$=make_operation('s', 2, $1, $2);}
+        ;
+
+    control_statement
+        : SWITCH '(' VARIABLE ')' switch_body_statement { variableHandler(scope_resolution($3), 0, 2);  $$ = make_operation(SWITCH, 2, make_identifier($3, 1), $5 );   }
+        ;
+
+    jump_statement
+        : BREAK   {   $$ = make_operation(BREAK, 0);  }
+        | {$$=NULL;}
+        ;
 
 	assignment_statement
         : VARIABLE '=' assignment_expr ';'
@@ -117,12 +214,20 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 		;
 
 	assignment_expr
-		: expr
-		| string_expr
+		: expr        {$$=$1;}
+		| string_expr {$$=$1;}
 		;
 
+    const_value
+        : '(' const_value ')'   { $$ = $2;}
+        | INT                   { (Const.ival=$1); $$=make_constant(Const,tINT);}
+        | STRING                { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
+        | CHAR                  { (Const.cval=$1); $$=make_constant(Const,tCHAR);}
+        | DOUBLE                { (Const.dval=$1); $$= make_constant(Const,tDOUBLE);}
+        ;
+
 	string_expr
-		: STRING    { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
+		: STRING                { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
 		;
 
 	declartion_statement
@@ -229,6 +334,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 
 %%
 
+
+// allocate new string
 char * newstr(char * txt)
 {
 	char *ret;
@@ -238,22 +345,8 @@ char * newstr(char * txt)
 	strcpy(ret,txt);
 	return ret;
 }
-/**
-* Generate assembly code for a hypothitical stack based machine
-* @param node in the parse tree
-**/
-struct Node* find_variable(char * txt)
-{
-	struct Symbol * temp;
 
-    // look up the symbol table
-    HASH_FIND_STR(symbolTable, txt, temp);
-    if(!temp)return NULL;
-    struct Node* ret;
-    ret->id.name=temp->name;
-    return ret;
 
-}
 char * scope_resolution(char *txt)
 {
 	char tmp[50];
@@ -299,6 +392,7 @@ void generate_code(struct Node * n)
 {
     if (n == NULL) return;  // in case there is no tree
 
+    int ca, labl2;
     // check the type of the node
     switch(n->type)
     {
@@ -307,72 +401,144 @@ void generate_code(struct Node * n)
         case OPERATION:
             switch(n->opr.operation)
             {
-            			case ';':
-	            			generate_code(n->opr.op[0]);
-            				generate_code(n->opr.op[1]);
-            				break;
-            			case 's':
-	            			if(n->opr.op[0]!=NULL)
-	            			generate_code(n->opr.op[0]);
-	            			if(n->opr.op[1]!=NULL)
-            				generate_code(n->opr.op[1]);
-            				break;
-            			case '=':
-            			    generate_code(n->opr.op[1]);
-            			    printf("MOV %s, R%d\n", n->opr.op[0]->id.name, reg);
-            				break;
-            			case '*':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("MUL R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-	            		case '+':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("ADD R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            			case '-':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("SUB R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            			case '/':
-            				generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("DIV R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            		    case '|':
-            		        generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("OR R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            		        break;
-            		    case '&':
-            		        generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("AND R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            		        break;
-            		    case '~':
-            				generate_code(n->opr.op[0]);
-            				printf("NEG R%d, R%d\n", reg-1, reg);
-            				reg -= 1;
-            		        break;
-            		    case '^':
-            		        generate_code(n->opr.op[1]);
-            				generate_code(n->opr.op[0]);
-            				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
-            				reg -= 1;
-            				break;
-            		    case UMINUS:
-            		        generate_code(n->opr.op[0]);
-            				printf("NEG R%d, R%d\n", reg-1, reg);
-            				reg -= 1;
-            		        break;
+                    case SWITCH:
+                        default_walker++;
+                        // move the switch variable to a register
+                        generate_code(n->opr.op[0]);
+                        labll++;
+
+                        // generate the switch body
+                        generate_code(n->opr.op[1]);
+
+                        // label the end of the switch statement
+                        printf("switch_labl%d:\n", labll--);
+
+                        // check the number of defualt statements that appeared
+                        // in the switch body
+                        if (number_default[default_walker] > 1)
+                        {
+                            yyerror("multiple default labels in one switch");
+                        }
+
+                        default_walker--;
+
+                        reg -= 1;
+                        break;
+                    case CASE:
+                        generate_code(n->opr.op[1]);
+                        if (n->opr.op[2] != NULL)
+                            generate_code(n->opr.op[2]);
+                        break;
+
+                    case DEFAULT:
+                        number_default[default_walker] += 1;
+
+                        generate_code(n->opr.op[0]);
+                        if (n->opr.op[1] != NULL)
+                            generate_code(n->opr.op[1]);
+                        break;
+                    case BREAK:
+                        printf("JMP switch_labl%d\n", labll);
+                        break;
+
+                    case 'c':
+                        // case statement special operations
+                        // that connect list of case statements that follows
+                        // each other. Goal here is to make all conditions first
+                        // then followed by the body of the case statements
+
+                        // generate the code of case statements conditions first
+                        for (ca = 0; ca <2; ca++)
+                            if (n->opr.op[ca]->opr.op[0] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == CASE)
+                            {
+                                
+                                generate_code(n->opr.op[ca]->opr.op[0]);
+                                // compare it
+                                printf("CMP R%d, R%d\n", reg-1, reg);
+                                printf("JE case_labl%d\n", labl2 = labl++);
+                                reg -= 1;
+                            }
+                            else if (n->opr.op[ca]->opr.op[0] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == DEFAULT)
+                            {
+                                printf("JMP case_labl%d\n", labl2 = labl++);
+                                labl++;
+                            }
+
+                        // generate the code of case statements body
+                        for (ca = 1; ca >=0; ca--)
+                            if (n->opr.op[ca] != NULL )
+                            {
+                                printf("case_labl%d:\n", labl2--);
+                                generate_code(n->opr.op[ca]);
+                            }
+
+
+                        break;
+                    // dummy operation for joining to statements together
+                    // see statement_list grammer
+        			case 's':
+            			if(n->opr.op[0]!=NULL)
+            			generate_code(n->opr.op[0]);
+            			if(n->opr.op[1]!=NULL)
+        				generate_code(n->opr.op[1]);
+        				break;
+        			case '=':
+        			    generate_code(n->opr.op[1]);
+        			    printf("MOV %s, R%d\n", n->opr.op[0]->id.name, reg);
+        				break;
+        			case '*':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("MUL R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+            		case '+':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("ADD R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        			case '-':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("SUB R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        			case '/':
+        				generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("DIV R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        		    case '|':
+        		        generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("OR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        		        break;
+        		    case '&':
+        		        generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("AND R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        		        break;
+        		    case '~':
+        				generate_code(n->opr.op[0]);
+        				printf("NEG R%d, R%d\n", reg-1, reg);
+        				reg -= 1;
+        		        break;
+        		    case '^':
+        		        generate_code(n->opr.op[1]);
+        				generate_code(n->opr.op[0]);
+        				printf("XOR R%d, R%d, R%d\n", reg-1, reg, reg-1);
+        				reg -= 1;
+        				break;
+        		    case UMINUS:
+        		        generate_code(n->opr.op[0]);
+        				printf("NEG R%d, R%d\n", reg-1, reg);
+        				reg -= 1;
+        		        break;
+
             }
             break;
 
@@ -405,6 +571,7 @@ void generate_code(struct Node * n)
 }
 
 // handle a varialbe usage
+// @param used either 1 or 0, 1 if the variable is read, 0 if its assigned
 struct Node * make_identifier(char name[], char used)
 {
     struct Node *n;
@@ -428,6 +595,8 @@ struct Node * make_identifier(char name[], char used)
 }
 
 // handle a const usage
+// @param value actual value of the const, use the 'Const' varialbe to allocate it
+// @param type of the variable
 struct Node * make_constant(YYSTYPE value, VariableType type)
 {
     struct Node * n;
@@ -498,12 +667,12 @@ struct Node * make_operation(int operation, int nOfOperands, ... )
     return n;
 }
 
+// free the memory occupied by a given tree
 void free_node(struct Node * n)
 {
-    int i;
-
     if (!n) return;
 
+    int i;
     if (n->type == OPERATION)
     {
         for (i = 0; i < n->opr.noOfOperands; i++)
@@ -624,13 +793,14 @@ void print_hashTable()
     }
 }
 
+// generate the code given by the tree root node tree
+// and clean that tree
 void make_codeSegment(struct Node * tree)
 {
 
     //printTree(tree,0,0,1,0);
     generate_code(tree);
     free_node(tree);
-    //printf("#------------------------\n");
 }
 
 int
@@ -651,6 +821,7 @@ yyerror(msg)
 char *msg;
 {
   fprintf(stderr, "%d: %s\n", yylineno, msg);
+  exit(0);
 }
 
 int

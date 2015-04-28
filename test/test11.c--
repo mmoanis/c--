@@ -1,0 +1,12 @@
+// switch statement
+han3rf x = 4;
+
+switch(x)
+{
+    case 4:
+        x = 4 - 2;
+        ;
+    case 1:
+        han3rf x = 1 * 2;
+        break;
+}

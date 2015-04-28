@@ -1,0 +1,23 @@
+// more switch cases
+
+han3rf x = 4;
+
+switch (x)
+{
+    case 4:
+        switch(x)
+        {
+            case 44:
+                han3rf y = 4-5;
+                break;
+            default:
+                han3rf yy = 3;
+                break;
+        }
+        break;
+
+    case 3:
+        han3rf e = 4-5;
+        break;
+
+}
