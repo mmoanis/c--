@@ -1,0 +1,12 @@
+// case statements with no body
+
+han3rf x = 4;
+
+switch(x)
+{
+    case 4:
+        ;
+    case 1:
+        han3rf x = 1 * 2;
+        break;
+}

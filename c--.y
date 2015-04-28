@@ -124,6 +124,9 @@ int ** scope_ptr;
 
 int labl=0, labll=0;
 
+// make sure only 1 default at maximum appears in switch body
+int default_walker=-1, number_default[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
 typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 /////////////////////////////////////////////////////////////////////////////
 %}
@@ -161,8 +164,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 
 %%
     list
-        : {$$=NULL;}
-        | list statement {	 make_codeSegment($2);}
+        : list statement {	 make_codeSegment($2);}
+        | {$$=NULL;}
         ;
 
     statement
@@ -214,20 +217,20 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 		;
 
 	assignment_expr
-		: expr    {$$=$1;}
+		: expr        {$$=$1;}
 		| string_expr {$$=$1;}
 		;
 
     const_value
         : '(' const_value ')'   { $$ = $2;}
-        | INT   { (Const.ival=$1); $$=make_constant(Const,tINT);}
-        | STRING     { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
-        | CHAR  { (Const.cval=$1); $$=make_constant(Const,tCHAR);}
-        | DOUBLE    { (Const.dval=$1); $$= make_constant(Const,tDOUBLE);}
+        | INT                   { (Const.ival=$1); $$=make_constant(Const,tINT);}
+        | STRING                { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
+        | CHAR                  { (Const.cval=$1); $$=make_constant(Const,tCHAR);}
+        | DOUBLE                { (Const.dval=$1); $$= make_constant(Const,tDOUBLE);}
         ;
 
 	string_expr
-		: STRING    { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
+		: STRING                { (Const.sval=newstr($1)); $$=make_constant(Const,tSTRING);}
 		;
 
 	declartion_statement
@@ -403,6 +406,7 @@ void generate_code(struct Node * n)
             switch(n->opr.operation)
             {
                     case SWITCH:
+                        default_walker++;
                         // move the switch variable to a register
                         generate_code(n->opr.op[0]);
                         labll++;
@@ -414,6 +418,13 @@ void generate_code(struct Node * n)
                         printf("switch_labl%d:\n", labll--);
                         //labl2+= 1;
 
+                        if (number_default[default_walker] > 1)
+                        {
+                            yyerror("multiple default labels in one switch");
+                        }
+
+                        default_walker--;
+
                         reg -= 1;
                         break;
                     case CASE:
@@ -423,6 +434,7 @@ void generate_code(struct Node * n)
                         break;
 
                     case DEFAULT:
+                        number_default[default_walker] += 1;
                         //printf("case_labl%d:\n", labl--);
                         generate_code(n->opr.op[0]);
                         if (n->opr.op[1] != NULL)
@@ -771,6 +783,7 @@ yyerror(msg)
 char *msg;
 {
   fprintf(stderr, "%d: %s\n", yylineno, msg);
+  //exit(0);
 }
 
 int
