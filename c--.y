@@ -122,7 +122,7 @@ int sfrom=0,sto=1;
 int scopes[110][110];
 int ** scope_ptr;
 
-int labl=0;
+int labl=0, labll=0;
 
 typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 /////////////////////////////////////////////////////////////////////////////
@@ -404,13 +404,13 @@ void generate_code(struct Node * n)
                     case SWITCH:
                         // move the switch variable to a register
                         generate_code(n->opr.op[0]);
-                        //reg_switch_case = reg;
+                        labll++;
 
                         // generate the switch body
                         generate_code(n->opr.op[1]);
 
                         // label the end of the switch statement
-                        printf("Label%d:\n", labl);
+                        printf("Labell%d:\n", labll--);
                         //labl2+= 1;
 
                         reg -= 1;
@@ -424,7 +424,7 @@ void generate_code(struct Node * n)
                             generate_code(n->opr.op[2]);
                         break;
                     case BREAK:
-                        printf("JMP Label\n");
+                        printf("JMP Labell%d\n", labll);
                         break;
                     case DEFAULT:
                         //printf("L%d:\n", labl1);
