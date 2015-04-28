@@ -65,10 +65,6 @@ struct Node * make_operation(int operation, int nOfOperands, ... );
 // -n: tree root
 void free_node(struct Node * n);
 
-// def = 0 assignment to
-        //1 defination
-        //2 usage
-
 // creates or checks the existance of variables in symbol table.
 // this function will raise yyerrors in case of variable error.
 // variable could be new one to be added, const variable used,
@@ -82,8 +78,9 @@ void free_node(struct Node * n);
 // notes: see issue#13
 void variableHandler(char yytext[], char isConst, char def);
 
-void
-validate_char(char * yytext);
+// read char data from a string
+// eg: "'4'" = '4'
+char validate_char(char * yytext);
 
 // print the variables in symbol table to the output stream
 void make_dataSegment();
@@ -395,7 +392,6 @@ void generate_code(struct Node * n)
 {
     if (n == NULL) return;  // in case there is no tree
 
-    //int labl1, labl2;
     int ca, labl2;
     // check the type of the node
     switch(n->type)
@@ -416,8 +412,9 @@ void generate_code(struct Node * n)
 
                         // label the end of the switch statement
                         printf("switch_labl%d:\n", labll--);
-                        //labl2+= 1;
 
+                        // check the number of defualt statements that appeared
+                        // in the switch body
                         if (number_default[default_walker] > 1)
                         {
                             yyerror("multiple default labels in one switch");
@@ -435,7 +432,7 @@ void generate_code(struct Node * n)
 
                     case DEFAULT:
                         number_default[default_walker] += 1;
-                        //printf("case_labl%d:\n", labl--);
+
                         generate_code(n->opr.op[0]);
                         if (n->opr.op[1] != NULL)
                             generate_code(n->opr.op[1]);
@@ -454,7 +451,7 @@ void generate_code(struct Node * n)
                         for (ca = 0; ca <2; ca++)
                             if (n->opr.op[ca]->opr.op[0] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == CASE)
                             {
-                                //printf("#CASEHEADER %d\n", labl++);
+                                
                                 generate_code(n->opr.op[ca]->opr.op[0]);
                                 // compare it
                                 printf("CMP R%d, R%d\n", reg-1, reg);
@@ -541,6 +538,7 @@ void generate_code(struct Node * n)
         				printf("NEG R%d, R%d\n", reg-1, reg);
         				reg -= 1;
         		        break;
+
             }
             break;
 
@@ -706,7 +704,21 @@ void variableHandler(char yytext[], char isConst, char def)
     }
     else if (!temp && def != 1)
     {
-        yyerror("undeclared variable, first use in scope");
+        // check for a more global defination
+
+        int length = strlen(yytext);
+        char * global = newstr(yytext);
+        global[length-1] = '0';
+        global[length-2] = '1';
+        global[length-3] = '0';
+
+        // look up the symbol table
+        HASH_FIND_STR(symbolTable, global, temp);
+        //yyerror(global);
+        if (!temp)
+            yyerror("undeclared variable, first use in scope");
+        else
+            strcpy(yytext, global);
     }
     else if (temp)
     {
@@ -723,16 +735,43 @@ void variableHandler(char yytext[], char isConst, char def)
     }
 }
 
-
-// TODO: not sure if we need this
-void
-validate_char(char * yytext)
+// read char data from a string
+// eg: "'4'" = '4'
+char validate_char(char * yytext)
 {
     if (strlen(yytext) > 3)
     {
-        yytext[1] = yytext[2];
-        yytext[2] = '\'';
-        yytext[3] = '\0';
+        // check for allawable escaped chars
+        switch (yytext[2])
+        {
+            case 'n':
+                return '\n';
+            case 't':
+                return '\t';
+            case '\'':
+                return '\'';
+            case '\\':
+                return '\\';
+            case '\/':
+                return '\/';
+            case '\"':
+                return '\"';
+            case '0':
+                return '\0';
+            case 'r':
+                return '\r';
+            case 'b':
+                return '\b';
+
+            default:
+                return '\0';
+                yyerror("undefinded character literal.");
+
+        }
+    }
+    else
+    {
+        return yytext[1];
     }
 }
 
@@ -762,7 +801,6 @@ void make_codeSegment(struct Node * tree)
     //printTree(tree,0,0,1,0);
     generate_code(tree);
     free_node(tree);
-    //printf("#------------------------\n");
 }
 
 int
@@ -783,7 +821,7 @@ yyerror(msg)
 char *msg;
 {
   fprintf(stderr, "%d: %s\n", yylineno, msg);
-  //exit(0);
+  exit(0);
 }
 
 int

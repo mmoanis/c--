@@ -1,0 +1,5 @@
+// reading chars
+han3rf x = '3';
+han3rf y = 'a';
+han3rf z = '\n';
+han3rf zd = '\g';
