@@ -410,21 +410,21 @@ void generate_code(struct Node * n)
                         generate_code(n->opr.op[1]);
 
                         // label the end of the switch statement
-                        printf("END:\n", labl);
+                        printf("Label%d:\n", labl);
                         //labl2+= 1;
 
                         reg -= 1;
                         break;
                     case CASE:
                         //printf("L%d:\n", labl1 = labl++);
-                        printf("#CASEBODY %d\n", labl--);
+                        printf("Label%d:\n", labl--);
 
                         generate_code(n->opr.op[1]);
                         if (n->opr.op[2] != NULL)
                             generate_code(n->opr.op[2]);
                         break;
                     case BREAK:
-                        printf("JMP END\n");
+                        printf("JMP Label\n");
                         break;
                     case DEFAULT:
                         //printf("L%d:\n", labl1);
@@ -441,11 +441,12 @@ void generate_code(struct Node * n)
                         for (ca = 0; ca <2; ca++)
                             if (n->opr.op[ca] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == CASE)
                             {
-                                printf("#CASEHEADER %d\n", labl++);
+                                //printf("#CASEHEADER %d\n", labl++);
                                 generate_code(n->opr.op[ca]->opr.op[0]);
                                 // compare it
                                 printf("CMP R%d, R%d\n", reg-1, reg);
-                                printf("JNE L%d\n", labl);
+                                printf("JE Label%d\n", labl + 1);
+                                labl++;
                                 reg -= 1;
                             }
                             else if (n->opr.op[ca] != NULL)
