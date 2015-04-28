@@ -84,7 +84,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 %token IF SWITCH ELSE ELSIF CASE DEFAULT TRUE FALSE CONST
 %token DO WHILE FOR AND OR NOT BREAK CONTINUE
 
-%type <node_ptr> list statement dep_parantasis_statement dep_statement_list dependent_statement statement_list parantasis_statement assignment_statement expr assignment_expr string_expr declartion_statement control_statement jump_statement labeled_statement const_value
+%type <node_ptr> list statement switch_body_statement case_list_statement case_statement statement_list parantasis_statement assignment_statement expr assignment_expr
+%type <node_ptr> string_expr declartion_statement control_statement jump_statement const_value
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
@@ -100,53 +101,44 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
         ;
 
     statement
-		: assignment_statement    {$$=$1;}
-		| declartion_statement    {$$=$1;}
-        | control_statement {$$=$1;}
-        | parantasis_statement  {$$=$1;}
-		| expr ';'    {$$=$1;}
+		: assignment_statement        {$$=$1;}
+		| declartion_statement        {$$=$1;}
+        | control_statement           {$$=$1;}
+        | parantasis_statement        {$$=$1;}
+		| expr ';'                    {$$=$1;}
 	    ;
 
-    dependent_statement
-        :   labeled_statement   {$$=$1;}
-        |   jump_statement  {$$=$1;}
-        | assignment_statement    {$$=$1;}
-		| declartion_statement    {$$=$1;}
-        | control_statement {$$=$1;}
-        | expr ';'    {$$=$1;}
-        | dep_parantasis_statement {$$=$1;}
+    switch_body_statement
+        :   case_statement             {$$=$1;}
+        | '{' case_list_statement '}'  {$$=$2;}
         ;
 
-    dep_parantasis_statement
-        : '{' dep_statement_list '}'   {$$=$2;}
+    case_list_statement
+        : case_statement                        {$$ = $1;}
+        | case_list_statement case_statement    {$$ = make_operation('c', 2, $1, $2);}
         ;
 
-    dep_statement_list
-        : dependent_statement {$$=$1;}
-        | dep_statement_list dependent_statement  {$$=make_operation('s', 2, $1, $2);}
+    case_statement
+        : CASE const_value ':' statement  jump_statement  {   $$ = make_operation(CASE, 3, $2, $4, $5);  }
+        | DEFAULT ':' statement {   $$ = make_operation(DEFAULT, 1, $3);  }
         ;
 
     parantasis_statement
-            : '{' statement_list '}'   {$$=$2;}
-            ;
+        : '{' statement_list '}'   {$$=$2;}
+        ;
+
     statement_list
         : statement {$$=$1;}
         | statement_list statement  {$$=make_operation('s', 2, $1, $2);}
         ;
 
     control_statement
-        : SWITCH '(' VARIABLE ')' dependent_statement { variableHandler(scope_resolution($3), 0, 2);  $$ = make_operation(SWITCH, 2, make_identifier($3, 1), $5 );   }
+        : SWITCH '(' VARIABLE ')' switch_body_statement { variableHandler(scope_resolution($3), 0, 2);  $$ = make_operation(SWITCH, 2, make_identifier($3, 1), $5 );   }
         ;
 
     jump_statement
         : BREAK ';'   {   $$ = make_operation(BREAK, 0);  }
         ;
-
-    labeled_statement
-        : CASE const_value ':' statement    {   $$ = make_operation(CASE, 2, $2, $4);  }
-        | DEFAULT ':' statement {  default_exists=1; $$ = make_operation(DEFAULT, 1, $3);  }
-        ;
-
 
 	assignment_statement
         : VARIABLE '=' assignment_expr ';'
@@ -335,7 +327,7 @@ void generate_code(struct Node * n)
     if (n == NULL) return;  // in case there is no tree
 
     //int labl1, labl2;
-
+    int ca;
     // check the type of the node
     switch(n->type)
     {
@@ -346,14 +338,14 @@ void generate_code(struct Node * n)
             {
                     case SWITCH:
                         // move the switch variable to a register
-                        //generate_code(n->opr.op[0]);
+                        generate_code(n->opr.op[0]);
                         //reg_switch_case = reg;
 
                         // generate the switch body
-                        //generate_code(n->opr.op[1]);
+                        generate_code(n->opr.op[1]);
 
                         // label the end of the switch statement
-                        //printf("LL%d:\n", labl2);  // labl2 marks the end of switch statement, to be used by break
+                        printf("END:\n");  // labl2 marks the end of switch statement, to be used by break
                         //labl2+= 1;
 
                         // in case of a missing default statement
@@ -370,23 +362,42 @@ void generate_code(struct Node * n)
                         break;
                     case CASE:
                         //printf("L%d:\n", labl1 = labl++);
+                        printf("#CASEBODY\n");
 
-                        // move variable to register
-                        //generate_code(n->opr.op[0]);
-
-                        // compare it
-                        //printf("CMP R%d, R%d\n", reg, reg_switch_case);
-                        //printf("JNE L%d\n", labl1);
-                        //generate_code(n->opr.op[1]);
+                        generate_code(n->opr.op[1]);
+                        if (n->opr.op[2] != NULL)
+                            generate_code(n->opr.op[2]);
                         break;
                     case BREAK:
-                        //printf("JMP LL%d:\n", labl2);
+                        printf("JMP END\n");
                         break;
                     case DEFAULT:
                         //printf("L%d:\n", labl1);
                         //generate_code(n->opr.op[0]);
                         break;
 
+                    case 'c':
+
+                        for (ca = 0; ca <2; ca++)
+                            if (n->opr.op[ca] != NULL && n->opr.op[ca]->type == OPERATION && n->opr.op[ca]->opr.operation == CASE)
+                            {
+                                printf("#CASEHEADER\n");
+                                generate_code(n->opr.op[ca]->opr.op[0]);
+                                // compare it
+                                printf("CMP R%d, R%d\n", reg, reg);
+                                printf("JNE L\n");
+                            }
+                            else if (n->opr.op[ca] != NULL)
+                            {
+                                generate_code(n->opr.op[ca]);
+                            }
+
+                        for (ca = 0; ca <2; ca++)
+                            if (n->opr.op[ca] != NULL )
+                                generate_code(n->opr.op[ca]);
+
+
+                        break;
                     // dummy operation for joining to statements together
                     // see statement_list grammer
         			case 's':
