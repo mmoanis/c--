@@ -161,8 +161,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 
 %%
     list
-        : list statement {	 make_codeSegment($2);}
-        |   {$$=NULL;}
+        : {$$=NULL;}
+        | list statement {	 make_codeSegment($2);}
         ;
 
     statement
@@ -184,8 +184,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
         ;
 
     case_statement
-        : CASE const_value ':' statement  jump_statement  {   $$ = make_operation(CASE, 3, $2, $4, $5);  }
-        | DEFAULT ':' statement {   $$ = make_operation(DEFAULT, 1, $3);  }
+        : CASE const_value ':' statement  jump_statement ';'  {   $$ = make_operation(CASE, 3, $2, $4, $5);  }
+        | DEFAULT ':' statement jump_statement ';'               {   $$ = make_operation(DEFAULT, 2, $3, $4);  }
         ;
 
     parantasis_statement
@@ -202,7 +202,8 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
         ;
 
     jump_statement
-        : BREAK ';'   {   $$ = make_operation(BREAK, 0);  }
+        : BREAK   {   $$ = make_operation(BREAK, 0);  }
+        | {$$=NULL;}
         ;
 
 	assignment_statement
@@ -424,6 +425,8 @@ void generate_code(struct Node * n)
                     case DEFAULT:
                         //printf("case_labl%d:\n", labl--);
                         generate_code(n->opr.op[0]);
+                        if (n->opr.op[1] != NULL)
+                            generate_code(n->opr.op[1]);
                         break;
                     case BREAK:
                         printf("JMP switch_labl%d\n", labll);
