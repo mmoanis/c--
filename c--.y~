@@ -121,10 +121,12 @@ int ** scope_ptr;
 
 int labl=0, labll=0;
 int llbl,loop_lbl=0;
+int brn_lbl=0;
 // make sure only 1 default at maximum appears in switch body
 int default_walker=-1, number_default[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 typedef enum {EQ, BQ, LQ, NQ} logicalOp;
+#define IF_ELSE 213123
 /////////////////////////////////////////////////////////////////////////////
 %}
 
@@ -152,7 +154,7 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
 
 %type <node_ptr> list statement switch_body_statement case_list_statement case_statement statement_list parantasis_statement assignment_statement expr assignment_expr
 %type <node_ptr> string_expr declartion_statement control_statement jump_statement const_value
-%type <node_ptr> loop_statement for_statement while_statement do_statement opexpr assignment_statement2
+%type <node_ptr> loop_statement for_statement while_statement do_statement opexpr assignment_statement2 if_statement
 
 %left "==" '>' '<' "!=" ">=" "<="
 %left '-' '+'
@@ -174,6 +176,7 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
         | parantasis_statement        {$$=$1;}
 		| expr ';'                    {$$=$1;}
 		| loop_statement			  {$$=$1;}
+		| if_statement				  {$$=$1;}
 	    ;
 
 	loop_statement
@@ -204,7 +207,10 @@ typedef enum {EQ, BQ, LQ, NQ} logicalOp;
         ;
 
 
-
+	if_statement
+		:IF '(' opexpr ')' statement 				{$$=make_operation(IF, 2, $3, $5 );}
+		|IF '(' opexpr ')' statement ELSE statement {$$=make_operation(IF_ELSE, 3, $3, $5,$7 );}
+		;
 
 
 
@@ -527,16 +533,16 @@ void generate_code(struct Node * n)
                     		char cond[4];
                     		if(n->opr.op[1]->opr.operation=='>')
                     		printf("JB loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation=='<')
+                    		if(n->opr.op[1]->opr.operation=='<')
                     		printf("JL loop_lable_%d\n",clbl);
                     		
-                    		if(n->opr.op[0]->opr.operation==BQ)
+                    		if(n->opr.op[1]->opr.operation==BQ)
                     		printf("JBQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==LQ)
+                    		if(n->opr.op[1]->opr.operation==LQ)
                     		printf("JLQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==EQ)
+                    		if(n->opr.op[1]->opr.operation==EQ)
                     		printf("JEQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==NQ)
+                    		if(n->opr.op[1]->opr.operation==NQ)
                     		printf("JNQ loop_lable_%d\n",clbl);
                     		//printf("%s Endloop_lable_%d\n",cond,llbl);
                     	}
@@ -548,7 +554,65 @@ void generate_code(struct Node * n)
                     	//sfrom--;sto--;
                     	break;
                     
-                    
+                    case IF_ELSE:
+                    	clbl=++brn_lbl;
+                    	printf("#-----cond-----\n");
+                    	generate_code(n->opr.op[0]);
+                    	if(n->opr.op[0]!=NULL)// da law fe condition 
+                    	{
+                    		char cond[4];
+                    		if(n->opr.op[0]->opr.operation=='>')
+                    		printf("JLQ branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation=='<')
+                    		printf("JBQ branch_lable_%d\n",clbl);
+                    		
+                    		if(n->opr.op[0]->opr.operation==BQ)
+                    		printf("JL branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation==LQ)
+                    		printf("JB branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation==EQ)
+                    		printf("JNQ branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation==NQ)
+                    		printf("JEQ branch_lable_%d\n",clbl);
+                    		//printf("%s Endloop_lable_%d\n",cond,llbl);
+                    	}
+                    	printf("#-----statement----\n");
+                    	generate_code(n->opr.op[1]);
+                    	printf("JMP End_branch_lable_%d:\n",clbl);
+                    	printf("branch_lable_%d:\n",clbl);
+                    	printf("#-----else statement----\n");
+                    	generate_code(n->opr.op[2]);
+                    	printf("End_branch_lable_%d:\n",clbl);
+                    	
+                    	break;
+                    case IF:
+                    	clbl=++brn_lbl;
+                    	printf("#-----cond-----\n");
+                    	generate_code(n->opr.op[0]);
+                    	if(n->opr.op[0]!=NULL)// da law fe condition 
+                    	{
+                    		char cond[4];
+                    		if(n->opr.op[0]->opr.operation=='>')
+                    		printf("JLQ branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation=='<')
+                    		printf("JBQ branch_lable_%d\n",clbl);
+                    		
+                    		if(n->opr.op[0]->opr.operation==BQ)
+                    		printf("JL branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation==LQ)
+                    		printf("JB branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation==EQ)
+                    		printf("JNQ branch_lable_%d\n",clbl);
+                    		if(n->opr.op[0]->opr.operation==NQ)
+                    		printf("JEQ branch_lable_%d\n",clbl);
+                    		//printf("%s Endloop_lable_%d\n",cond,llbl);
+                    	}
+                    	printf("#-----statement----\n");
+                    	generate_code(n->opr.op[1]);
+                    	
+                    	
+                    	break;
+                    	
                     
                     case '<'://logical operation assum CMP saving in register FLAGS E,G,L,GE,LE => "==",">","<", ..
                     	generate_code(n->opr.op[1]);
