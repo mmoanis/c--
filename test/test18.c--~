@@ -4,7 +4,7 @@ han3rf z=1;
 for(han3rf i=0;i<y;i=i+1)
 {
 	x=2*x;
-	do
+	DO
 	{
 		x=x-1;
 		z=z+1;

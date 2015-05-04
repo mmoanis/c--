@@ -527,16 +527,16 @@ void generate_code(struct Node * n)
                     		char cond[4];
                     		if(n->opr.op[1]->opr.operation=='>')
                     		printf("JB loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation=='<')
+                    		if(n->opr.op[1]->opr.operation=='<')
                     		printf("JL loop_lable_%d\n",clbl);
                     		
-                    		if(n->opr.op[0]->opr.operation==BQ)
+                    		if(n->opr.op[1]->opr.operation==BQ)
                     		printf("JBQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==LQ)
+                    		if(n->opr.op[1]->opr.operation==LQ)
                     		printf("JLQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==EQ)
+                    		if(n->opr.op[1]->opr.operation==EQ)
                     		printf("JEQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==NQ)
+                    		if(n->opr.op[1]->opr.operation==NQ)
                     		printf("JNQ loop_lable_%d\n",clbl);
                     		//printf("%s Endloop_lable_%d\n",cond,llbl);
                     	}

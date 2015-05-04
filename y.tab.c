@@ -2249,10 +2249,10 @@ void generate_code(struct Node * n)
                     	//sfrom++;sto++;++scopes[sfrom][sto];
                     	llbl=++loop_lbl;
                     	clbl=llbl;
-                    	printf("//=====init=======\n");
+                    	printf("#=====init=======\n");
                     	generate_code(n->opr.op[0]);
                     	printf("looplable_%d:\n",clbl);
-                    	printf("//-----cond-----\n");
+                    	printf("#-----cond-----\n");
                     	generate_code(n->opr.op[1]);
                     	if(n->opr.op[1]!=NULL)// da law fe condition 
                     	{
@@ -2272,12 +2272,12 @@ void generate_code(struct Node * n)
                     		//printf("%s Endloop_lable_%d\n",cond,llbl);
                     	}
                     	
-                    	printf("//-----statement-----\n");
+                    	printf("#-----statement-----\n");
                     	generate_code(n->opr.op[3]);
-                    	printf("//-----step-----\n");
+                    	printf("#-----step-----\n");
                     	generate_code(n->opr.op[2]);
                     	printf("JMP looplable_%d\n",clbl);
-                    	printf("//=====end=======\n");
+                    	printf("#=====end=======\n");
                     	printf("Endloop_lable_%d:\n",clbl);
                     	//sfrom--;sto--;
                     	break;
@@ -2285,7 +2285,7 @@ void generate_code(struct Node * n)
                     	//sfrom++;sto++;++scopes[sfrom][sto];
                     	llbl=++loop_lbl;
                     	clbl=llbl;
-                    	printf("//=====cond=======\n");
+                    	printf("#=====cond=======\n");
                     	
                     	printf("looplable_%d:\n",clbl);
                     	
@@ -2309,10 +2309,10 @@ void generate_code(struct Node * n)
                     		//printf("%s Endloop_lable_%d\n",cond,llbl);
                     	}
                     	
-                    	printf("//-----statement-----\n");
+                    	printf("#-----statement-----\n");
                     	generate_code(n->opr.op[1]);
                     	printf("JMP looplable_%d\n",clbl);
-                    	printf("//=====end=======\n");
+                    	printf("#=====end=======\n");
                     	printf("Endloop_lable_%d:\n",clbl);
                     	//sfrom--;sto--;
                     	break;
@@ -2321,35 +2321,35 @@ void generate_code(struct Node * n)
                     	//sfrom++;sto++;++scopes[sfrom][sto];
                     	llbl=++loop_lbl;
                     	clbl=llbl;
-                    	printf("//===============\n");
+                    	printf("#===============\n");
                     	
                     	printf("looplable_%d:\n",clbl);
-                    	printf("//-----statement-----\n");
+                    	printf("#-----statement-----\n");
                     	generate_code(n->opr.op[0]);
-                    	printf("//-----cond-----\n");
+                    	printf("#-----cond-----\n");
                     	generate_code(n->opr.op[1]);
                     	if(n->opr.op[1]!=NULL)// da law fe condition 
                     	{
                     		char cond[4];
                     		if(n->opr.op[1]->opr.operation=='>')
                     		printf("JB loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation=='<')
+                    		if(n->opr.op[1]->opr.operation=='<')
                     		printf("JL loop_lable_%d\n",clbl);
                     		
-                    		if(n->opr.op[0]->opr.operation==BQ)
+                    		if(n->opr.op[1]->opr.operation==BQ)
                     		printf("JBQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==LQ)
+                    		if(n->opr.op[1]->opr.operation==LQ)
                     		printf("JLQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==EQ)
+                    		if(n->opr.op[1]->opr.operation==EQ)
                     		printf("JEQ loop_lable_%d\n",clbl);
-                    		if(n->opr.op[0]->opr.operation==NQ)
+                    		if(n->opr.op[1]->opr.operation==NQ)
                     		printf("JNQ loop_lable_%d\n",clbl);
                     		//printf("%s Endloop_lable_%d\n",cond,llbl);
                     	}
                     	
                     	
                     	//printf("JMP looplable_%d\n",clbl);
-                    	printf("//=====end=======\n");
+                    	printf("#=====end=======\n");
                     	printf("Endloop_lable_%d:\n",clbl);
                     	//sfrom--;sto--;
                     	break;
