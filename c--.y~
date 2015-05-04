@@ -609,7 +609,7 @@ void generate_code(struct Node * n)
                     	}
                     	printf("#-----statement----\n");
                     	generate_code(n->opr.op[1]);
-                    	printf("branch_lable_%d:\n",clbl);
+                    	
                     	
                     	break;
                     	

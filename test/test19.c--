@@ -1,0 +1,14 @@
+han3rf x=1;
+if(x==1)
+{
+	han3rf y;
+	x=x+1;
+}
+else
+if(x==2)
+{
+	x=4;
+}
+else
+	x=x-2;
+
