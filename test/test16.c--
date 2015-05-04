@@ -1,0 +1,10 @@
+han3rf x=1;
+han3rf y=10;
+han3rf z=1;
+for(han3rf i=0;i<y;i=i+1)
+{
+	x=2*x;
+	for( han3rf j=0;j<y*2;j=j+1)
+	z=z+1;
+	
+}

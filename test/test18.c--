@@ -1,0 +1,13 @@
+han3rf x=1;
+han3rf y=10;
+han3rf z=1;
+for(han3rf i=0;i<y;i=i+1)
+{
+	x=2*x;
+	DO
+	{
+		x=x-1;
+		z=z+1;
+	}while(z>=10)
+	
+}

@@ -1,0 +1,6 @@
+han3rf x=1;
+han3rf y=10;
+for(han3rf i=0;i<y;i=i+1)
+{
+	x=2*x;
+}

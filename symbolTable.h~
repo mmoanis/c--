@@ -43,7 +43,7 @@ typedef struct {
 typedef struct {
     int operation;  // operation
     int noOfOperands;   // no. of operands
-    struct Node *op[6];  // operands
+    struct Node *op[10];  // operands
 } OperationNodeType;
 
 // a node in the parse tree.
