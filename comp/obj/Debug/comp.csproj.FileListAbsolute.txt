@@ -1,0 +1,12 @@
+c:\users\dina\documents\visual studio 2012\Projects\comp\bin\Debug\comp.exe.config
+c:\users\dina\documents\visual studio 2012\Projects\comp\bin\Debug\comp.exe
+c:\users\dina\documents\visual studio 2012\Projects\comp\bin\Debug\comp.pdb
+c:\users\dina\documents\visual studio 2012\Projects\comp\obj\Debug\comp.csprojResolveAssemblyReference.cache
+c:\users\dina\documents\visual studio 2012\Projects\comp\obj\Debug\comp.Form1.resources
+c:\users\dina\documents\visual studio 2012\Projects\comp\obj\Debug\comp.Properties.Resources.resources
+c:\users\dina\documents\visual studio 2012\Projects\comp\obj\Debug\comp.csproj.GenerateResource.Cache
+c:\users\dina\documents\visual studio 2012\Projects\comp\obj\Debug\comp.exe
+c:\users\dina\documents\visual studio 2012\Projects\comp\obj\Debug\comp.pdb
+E:\Documents\8th Semster\Languages and Compilers\comp\comp\bin\Debug\comp.exe.config
+E:\Documents\8th Semster\Languages and Compilers\comp\comp\obj\Debug\comp.exe
+E:\Documents\8th Semster\Languages and Compilers\comp\comp\obj\Debug\comp.pdb
