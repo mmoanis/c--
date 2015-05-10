@@ -1076,7 +1076,7 @@ yyerror(msg)
 char *msg;
 {
   fprintf(stderr, "%d: %s\n", yylineno, msg);
-  exit(0);
+  exit(1);
 }
 
 int
