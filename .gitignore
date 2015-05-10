@@ -7,3 +7,6 @@ lex.yy.c
 c--
 y.output
 *.pdf
+comp/obj/Debug/comp.csproj.FileListAbsolute.txt
+comp/obj/Debug/comp.csproj.FileListAbsolute.txt
+comp/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
