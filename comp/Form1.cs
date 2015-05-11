@@ -18,6 +18,7 @@ namespace comp
     {
         private bool errros;
         private string errors;
+        private string program;
 
         // Contains all the opened pages
         private List<TabPage> openedPages;
@@ -25,7 +26,7 @@ namespace comp
         public Form1()
         {
             InitializeComponent();
-
+            program = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetEntryAssembly().Location) + "\\c--.exe ";
             // choose the release
             toolStripComboBox1.SelectedIndex = 0;
 
@@ -251,7 +252,7 @@ namespace comp
                     layout.FileName += ".c--"; 
                 }
 
-                string format = "start /B E:c-- < " + layout.FilePath + "\\" + layout.FileName + " > " + layout.FilePath + "\\" + layout.OutPutFileName;
+                string format = "start /B " + program + " < " + layout.FilePath + "\\" + layout.FileName + " > " + layout.FilePath + "\\" + layout.OutPutFileName;
 
                 var process = new System.Diagnostics.Process();
                 process.StartInfo.FileName = "cmd.exe";
