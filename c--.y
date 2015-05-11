@@ -1063,7 +1063,7 @@ main(int argc, char * argv[])
     FILE * input_file = fopen(argv[1], 'r');
     FILE * output_file = fopen(argv[2], 'w');
     yyset_in (input_file );
-    yyset_out (output_file )
+    yyset_out (output_file );
 
     memset(scopes,0,sizeof(scopes));
     printf("#c-- compiler\n");
