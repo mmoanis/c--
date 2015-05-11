@@ -103,6 +103,38 @@ namespace comp
         }
 
         /// <summary>
+        /// Highlit a given text
+        /// </summary>
+        /// <param name="start"></param>
+        /// <param name="length"></param>
+        public void SetSelectedText(int start, int length)
+        {
+            codeTextBox.Select(start, length);
+        }
+
+        /// <summary>
+        /// Gets the currently selected text.
+        /// </summary>
+        public string SelectedText
+        {
+            get
+            {
+                return codeTextBox.SelectedText;
+            }
+        }
+
+        /// <summary>
+        /// Gets the index of selection
+        /// </summary>
+        public int CursorIndex
+        {
+            get
+            {
+                return codeTextBox.SelectionStart;
+            }
+        }
+
+        /// <summary>
         /// Save the content of the page to its associated file.
         /// </summary>
         public void SaveContent()

@@ -317,7 +317,10 @@ namespace comp
                     PageLayout layout = tabControl1.SelectedTab.Controls[0] as PageLayout;
                     int i = layout.Content.IndexOf(output);
                     if (i != -1)
+                    {
+                        layout.SetSelectedText(i, output.Length);
                         MessageBox.Show("found " + output + " at " + i);
+                    }
                     else
                         MessageBox.Show(output + " not found");
                 }
@@ -375,6 +378,24 @@ namespace comp
             {
                 errros = true;
                 errors = errLine.Data;
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void copyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            // paranoid check
+            if (tabControl1.SelectedIndex != -1)
+            {
+                PageLayout layout = tabControl1.SelectedTab.Controls[0] as PageLayout;
+                if (!string.IsNullOrEmpty(layout.SelectedText))
+                {
+                    Clipboard.SetText(layout.SelectedText);
+                }
             }
         }
     }
