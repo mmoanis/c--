@@ -10,3 +10,5 @@ y.output
 comp/obj/Debug/comp.csproj.FileListAbsolute.txt
 comp/obj/Debug/comp.csproj.FileListAbsolute.txt
 comp/obj/Debug/DesignTimeResolveAssemblyReferencesInput.cache
+comp/bin/Debug/a.asm
+comp/bin/Debug/comp.pdb
